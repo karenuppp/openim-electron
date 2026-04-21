@@ -118,6 +118,10 @@
   "placeholder": {
     "conversation": "会话",
     "leaveMessage": "留言",
+    "image": "图片",
+    "call": "通话",
+    "file": "文件",
+    "screenshot": "截图",
     "recover": "点击恢复",
     "someInCall": "{{count}}人正在通话",
     "compere": "主持人",

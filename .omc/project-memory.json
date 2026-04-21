@@ -1,0 +1,327 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1776740376254,
+  "projectRoot": "/Users/hgj/Desktop/hermes_workspace/openim-electron-demo",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": "^14.18.0 || >=16.0.0",
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "@playwright/test",
+        "version": "1.31.0",
+        "category": "testing"
+      },
+      {
+        "name": "react",
+        "version": "18.2.0",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "18.2.0",
+        "category": "frontend"
+      },
+      {
+        "name": "vite",
+        "version": "4.1.4",
+        "category": "build"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": "Node.js 14.18.0||16.0.0"
+  },
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": null,
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "vite --force --host",
+      "build": "vite build",
+      "preview": "vite preview",
+      "pree2e": "vite build --mode=test",
+      "e2e": "playwright test",
+      "format": "prettier --write .",
+      "lint": "eslint --ext .js,.jsx,.ts,.tsx src",
+      "lint:fix": "eslint --ext .js,.jsx,.ts,.tsx --fix --quiet src",
+      "prepare": "husky install",
+      "postinstall": "patch-package"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": "type-based"
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs",
+      "public",
+      "src"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "dist": {
+      "path": "dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 7,
+      "lastAccessed": 1776740376238,
+      "keyFiles": [
+        "emojis.json",
+        "favicon.ico",
+        "index.html",
+        "openIM.wasm",
+        "splash.html"
+      ]
+    },
+    "dist-electron": {
+      "path": "dist-electron",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1776740376247,
+      "keyFiles": [
+        "electron-env.d.js"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 0,
+      "lastAccessed": 1776740376247,
+      "keyFiles": []
+    },
+    "e2e": {
+      "path": "e2e",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1776740376248,
+      "keyFiles": [
+        "example.spec.ts"
+      ]
+    },
+    "electron": {
+      "path": "electron",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1776740376248,
+      "keyFiles": [
+        "electron-env.d.ts"
+      ]
+    },
+    "patches": {
+      "path": "patches",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1776740376248,
+      "keyFiles": [
+        "@ckeditor+ckeditor5-ui+43.0.0.patch"
+      ]
+    },
+    "public": {
+      "path": "public",
+      "purpose": "Public files",
+      "fileCount": 6,
+      "lastAccessed": 1776740376248,
+      "keyFiles": [
+        "emojis.json",
+        "favicon.ico",
+        "openIM.wasm",
+        "splash.html",
+        "sql-wasm.wasm"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 5,
+      "lastAccessed": 1776740376248,
+      "keyFiles": [
+        "AntdGlobalComp.tsx",
+        "App.tsx",
+        "index.scss",
+        "main.tsx",
+        "vite-env.d.ts"
+      ]
+    },
+    "dist/assets": {
+      "path": "dist/assets",
+      "purpose": "Static assets",
+      "fileCount": 96,
+      "lastAccessed": 1776740376249,
+      "keyFiles": [
+        "accessibility-fcaf4e02.svg",
+        "align-bottom-bf11cd09.svg",
+        "align-center-f5f09d71.svg"
+      ]
+    },
+    "dist-electron/utils": {
+      "path": "dist-electron/utils",
+      "purpose": "Utility functions",
+      "fileCount": 3,
+      "lastAccessed": 1776740376249,
+      "keyFiles": [
+        "imsdk.js",
+        "index.js",
+        "log.js"
+      ]
+    },
+    "electron/utils": {
+      "path": "electron/utils",
+      "purpose": "Utility functions",
+      "fileCount": 3,
+      "lastAccessed": 1776740376249,
+      "keyFiles": [
+        "imsdk.ts",
+        "index.ts",
+        "log.ts"
+      ]
+    },
+    "src/api": {
+      "path": "src/api",
+      "purpose": "API routes",
+      "fileCount": 4,
+      "lastAccessed": 1776740376250,
+      "keyFiles": [
+        "errorHandle.ts",
+        "imApi.ts",
+        "login.ts"
+      ]
+    },
+    "src/assets": {
+      "path": "src/assets",
+      "purpose": "Static assets",
+      "fileCount": 1,
+      "lastAccessed": 1776740376250,
+      "keyFiles": [
+        "node.svg"
+      ]
+    },
+    "src/components": {
+      "path": "src/components",
+      "purpose": "UI components",
+      "fileCount": 0,
+      "lastAccessed": 1776740376250,
+      "keyFiles": []
+    },
+    "src/config": {
+      "path": "src/config",
+      "purpose": "Configuration files",
+      "fileCount": 1,
+      "lastAccessed": 1776740376250,
+      "keyFiles": [
+        "index.ts"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "electron/main/ipcHandlerManage.ts",
+      "accessCount": 6,
+      "lastAccessed": 1776759088326,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/chat/queryChat/ChatFooter/index.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1776758909596,
+      "type": "file"
+    },
+    {
+      "path": "electron",
+      "accessCount": 3,
+      "lastAccessed": 1776758875699,
+      "type": "directory"
+    },
+    {
+      "path": "src/pages/chat/queryChat/MessageItem/FileMessageRender.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1776759021440,
+      "type": "file"
+    },
+    {
+      "path": "electron/constants/index.ts",
+      "accessCount": 2,
+      "lastAccessed": 1776758954217,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/chat/queryChat/ChatFooter/SendActionBar/useFileMessage.ts",
+      "accessCount": 1,
+      "lastAccessed": 1776756969175,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/chat/queryChat/ChatFooter/SendActionBar/index.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1776756969227,
+      "type": "file"
+    },
+    {
+      "path": "electron/main/windowManage.ts",
+      "accessCount": 1,
+      "lastAccessed": 1776757011674,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/chat/queryChat/MessageItem/index.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1776758828839,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/chat/queryChat/MessageItem/MediaMessageRender.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1776758834871,
+      "type": "file"
+    },
+    {
+      "path": "electron/preload/index.ts",
+      "accessCount": 1,
+      "lastAccessed": 1776758880802,
+      "type": "file"
+    },
+    {
+      "path": "electron/constants",
+      "accessCount": 1,
+      "lastAccessed": 1776758943958,
+      "type": "directory"
+    },
+    {
+      "path": "src/types/globalExpose.d.ts",
+      "accessCount": 1,
+      "lastAccessed": 1776758964078,
+      "type": "file"
+    },
+    {
+      "path": "src",
+      "accessCount": 1,
+      "lastAccessed": 1776759105517,
+      "type": "directory"
+    }
+  ],
+  "userDirectives": []
+}

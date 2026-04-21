@@ -117,6 +117,10 @@
   "placeholder": {
     "conversation": "Conversation",
     "leaveMessage": "Leave a message",
+    "image": "Image",
+    "call": "Call",
+    "file": "File",
+    "screenshot": "Screenshot",
     "recover": "Click to recover",
     "someInCall": "{{count}} people are on a call",
     "compere": "Host",

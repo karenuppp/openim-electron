@@ -1,4 +1,4 @@
-import { BrowserWindow, Menu, app, dialog, ipcMain } from "electron";
+import { BrowserWindow, Menu, app, dialog, ipcMain, desktopCapturer, shell } from "electron";
 import {
   clearCache,
   closeWindow,
@@ -11,8 +11,13 @@ import { t } from "i18next";
 import { IpcRenderToMain } from "../constants";
 import { getStore } from "./storeManage";
 import { changeLanguage } from "../i18n";
+import path from "path";
+import fs from "fs";
+import Screenshots from "electron-screenshots";
 
 const store = getStore();
+
+let screenshotsInstance: Screenshots | null = null;
 
 export const setIpcMainListener = () => {
   ipcMain.handle(IpcRenderToMain.clearSession, () => {
@@ -83,6 +88,54 @@ export const setIpcMainListener = () => {
       window: BrowserWindow.getFocusedWindow()!,
     });
   });
+  ipcMain.handle(IpcRenderToMain.captureScreen, async () => {
+    try {
+      return await new Promise<string | null>((resolve, reject) => {
+        if (screenshotsInstance) {
+          screenshotsInstance.endCapture();
+        }
+        screenshotsInstance = new Screenshots();
+        screenshotsInstance.on("ok", async (_, buffer: Buffer) => {
+          try {
+            const saveDir = global.pathConfig.sdkResourcesPath;
+            if (!fs.existsSync(saveDir)) {
+              fs.mkdirSync(saveDir, { recursive: true });
+            }
+            const filePath = path.join(saveDir, `screenshot_${Date.now()}.png`);
+            await fs.promises.writeFile(filePath, buffer);
+            screenshotsInstance?.endCapture();
+            screenshotsInstance = null;
+            resolve(filePath);
+          } catch (e) {
+            screenshotsInstance?.endCapture();
+            screenshotsInstance = null;
+            reject(e);
+          }
+        });
+        screenshotsInstance.on("cancel", () => {
+          screenshotsInstance?.endCapture();
+          screenshotsInstance = null;
+          resolve(null);
+        });
+        screenshotsInstance.startCapture();
+      });
+    } catch (e) {
+      console.error("capture-screen failed", e);
+      return null;
+    }
+  });
+
+  ipcMain.handle(IpcRenderToMain.openFile, async (_, filePath: string) => {
+    try {
+      if (!filePath) return false;
+      await shell.openPath(filePath);
+      return true;
+    } catch (e) {
+      console.error("open-file failed", e);
+      return false;
+    }
+  });
+
   ipcMain.on(IpcRenderToMain.getDataPath, (e, key: string) => {
     switch (key) {
       case "public":

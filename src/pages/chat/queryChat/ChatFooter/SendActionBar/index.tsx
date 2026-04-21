@@ -9,6 +9,8 @@ import React from "react";
 
 import image from "@/assets/images/chatFooter/image.png";
 import rtc from "@/assets/images/chatFooter/rtc.png";
+import fileIcon from "@/assets/images/chatFooter/file.png";
+import cut from "@/assets/images/chatFooter/cut.png";
 
 import { SendMessageParams } from "../useSendMessage";
 import CallPopContent from "./CallPopContent";
@@ -24,6 +26,22 @@ const sendActionList = [
     placement: undefined,
   },
   {
+    title: t("placeholder.file"),
+    icon: fileIcon,
+    key: "file",
+    accept: "*",
+    comp: null,
+    placement: undefined,
+  },
+  {
+    title: t("placeholder.screenshot"),
+    icon: cut,
+    key: "screenshot",
+    accept: undefined,
+    comp: null,
+    placement: undefined,
+  },
+  {
     title: t("placeholder.call"),
     icon: rtc,
     key: "rtc",
@@ -35,15 +53,19 @@ const sendActionList = [
 
 i18n.on("languageChanged", () => {
   sendActionList[0].title = t("placeholder.image");
-  sendActionList[1].title = t("placeholder.call");
+  sendActionList[1].title = t("placeholder.file");
+  sendActionList[2].title = t("placeholder.screenshot");
+  sendActionList[3].title = t("placeholder.call");
 });
 
 const SendActionBar = ({
   sendMessage,
   getImageMessage,
+  getFileMessage,
 }: {
   sendMessage: (params: SendMessageParams) => Promise<void>;
   getImageMessage: (file: File) => Promise<MessageItem>;
+  getFileMessage: (file: File) => Promise<MessageItem>;
 }) => {
   const [visibleState, setVisibleState] = useState(false);
   const isGroupSession = useConversationStore(
@@ -52,11 +74,29 @@ const SendActionBar = ({
 
   const closePop = () => setVisibleState(false);
 
-  const fileHandle = async (options: UploadRequestOption) => {
+  const imageHandle = async (options: UploadRequestOption) => {
     const message = await getImageMessage(options.file as File);
-    sendMessage({
-      message,
-    });
+    sendMessage({ message });
+  };
+
+  const fileHandle = async (options: UploadRequestOption) => {
+    const message = await getFileMessage(options.file as File);
+    sendMessage({ message });
+  };
+
+  const screenshotHandle = async () => {
+    if (!window.electronAPI) return;
+    try {
+      const filePath = await window.electronAPI.ipcInvoke("capture-screen");
+      if (!filePath) return;
+      const message = await getFileMessage({
+        path: filePath,
+        name: `screenshot_${Date.now()}.png`,
+      } as unknown as File);
+      sendMessage({ message });
+    } catch (e) {
+      console.error("screenshot failed", e);
+    }
   };
 
   return (
@@ -85,7 +125,10 @@ const SendActionBar = ({
             popProps={popProps}
             key={action.key}
             accept={action.accept}
+            imageHandle={imageHandle}
             fileHandle={fileHandle}
+            screenshotHandle={screenshotHandle}
+            actionKey={action.key}
           >
             <div
               className={clsx("flex cursor-pointer items-center last:mr-0", {
@@ -107,24 +150,33 @@ const ActionWrap = ({
   accept,
   popProps,
   children,
+  imageHandle,
   fileHandle,
+  screenshotHandle,
+  actionKey,
 }: {
   accept?: string;
   children: ReactNode;
   popProps?: PopoverProps;
+  imageHandle: (options: UploadRequestOption) => void;
   fileHandle: (options: UploadRequestOption) => void;
+  screenshotHandle?: () => void;
+  actionKey?: string;
 }) => {
-  return accept ? (
-    <Upload
-      showUploadList={false}
-      customRequest={fileHandle}
-      accept={accept}
-      multiple
-      className="mr-5 flex"
-    >
-      {children}
-    </Upload>
-  ) : (
-    <Popover {...popProps}>{children}</Popover>
-  );
+  if (actionKey === "screenshot") {
+    return (
+      <div className="mr-5 flex cursor-pointer" onClick={screenshotHandle}>
+        {children}
+      </div>
+    );
+  }
+  if (accept) {
+    const handle = actionKey === "file" ? fileHandle : imageHandle;
+    return (
+      <Upload showUploadList={false} customRequest={handle} accept={accept} multiple className="mr-5 flex">
+        {children}
+      </Upload>
+    );
+  }
+  return <Popover {...popProps}>{children}</Popover>;
 };

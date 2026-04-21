@@ -9,7 +9,7 @@ import i18n from "@/i18n";
 import { IMSDK } from "@/layout/MainContentWrap";
 
 import SendActionBar from "./SendActionBar";
-import { useFileMessage } from "./SendActionBar/useFileMessage";
+import { useFileMessage, FileWithPath } from "./SendActionBar/useFileMessage";
 import { useSendMessage } from "./useSendMessage";
 
 const sendActions = [
@@ -26,7 +26,7 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
   const [html, setHtml] = useState("");
   const latestHtml = useLatest(html);
 
-  const { getImageMessage } = useFileMessage();
+  const { getImageMessage, getFileMessage } = useFileMessage();
   const { sendMessage } = useSendMessage();
 
   const onChange = (value: string) => {
@@ -42,10 +42,29 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
     sendMessage({ message });
   };
 
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length === 0) return;
+    for (const file of files) {
+      const isImage = file.type.startsWith("image/");
+      const message = isImage
+        ? await getImageMessage(file)
+        : await getFileMessage(file as FileWithPath);
+      sendMessage({ message });
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   return (
-    <footer className="relative h-full bg-white py-px">
+    <footer className="relative h-full bg-white py-px" onDrop={handleDrop} onDragOver={handleDragOver}>
       <div className="flex h-full flex-col border-t border-t-[var(--gap-text)]">
-        <SendActionBar sendMessage={sendMessage} getImageMessage={getImageMessage} />
+        <SendActionBar sendMessage={sendMessage} getImageMessage={getImageMessage} getFileMessage={getFileMessage} />
         <div className="relative flex flex-1 flex-col overflow-hidden">
           <CKEditor value={html} onEnter={enterToSend} onChange={onChange} />
           <div className="flex items-center justify-end py-2 pr-3">
