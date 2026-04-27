@@ -16,7 +16,7 @@ import RegisterForm from "./RegisterForm";
 export type FormType = 0 | 1 | 2;
 
 export const Login = () => {
-  // 0login 1resetPassword 2register
+
   const [formType, setFormType] = useState<FormType>(0);
   const [loginMethod, setLoginMethod] = useState<"phone" | "email">(getLoginMethod());
 

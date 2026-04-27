@@ -7,8 +7,6 @@ import { useConversationStore, useUserStore } from "@/store";
 import { emit } from "@/utils/events";
 import { getIMToken, getIMUserID } from "@/utils/storage";
 
-// const isElectronProd = import.meta.env.MODE !== "development" && window.electronAPI;
-
 const { instance } = getWithRenderProcess({
   wasmConfig: {
     coreWasmPath: "./openIM.wasm",

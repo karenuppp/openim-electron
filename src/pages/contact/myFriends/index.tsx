@@ -37,7 +37,7 @@ export const MyFriends = () => {
 
       virtuoso.current?.scrollToIndex({
         index: prevNum ?? 0,
-        // behavior: "smooth",
+
       });
     },
     [sectionData?.groupCounts],

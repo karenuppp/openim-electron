@@ -92,7 +92,7 @@ const NavItem = ({ nav: { icon, icon_active, title, path } }: { nav: NavItemType
       return;
     }
 
-    // TODO Keep answering when jumping back to chat from another page (if there is one)
+
     navigator.push(path);
   };
 

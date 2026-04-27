@@ -6,6 +6,7 @@ import { useCallback } from "react";
 import { IMSDK } from "@/layout/MainContentWrap";
 import { useConversationStore } from "@/store";
 import { emit } from "@/utils/events";
+import { feedbackToast } from "@/utils/common";
 
 import { pushNewMessage, updateOneMessage } from "../useHistoryMessageList";
 
@@ -40,6 +41,8 @@ export function useSendMessage() {
         const { data: successMessage } = await IMSDK.sendMessage(options);
         updateOneMessage(successMessage);
       } catch (error) {
+        console.error('[useSendMessage] sendMessage failed:', error);
+        feedbackToast({ msg: '发送失败，请检查网络后重试' });
         updateOneMessage({
           ...message,
           status: MessageStatus.Failed,

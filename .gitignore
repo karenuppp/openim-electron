@@ -25,14 +25,19 @@ release
 *.sln
 *.sw?
 
-#lockfile
-package-lock.json
-pnpm-lock.yaml
-yarn.lock
+# lockfiles (uncomment the one you use)
+# pnpm-lock.yaml
+# yarn.lock
+
+# Environment files (override with .env.local for local dev)
+.env
+.env.*
+!.env.example
+
 /test-results/
 /playwright-report/
 /playwright/.cache/
 
-# sdk core
+# SDK core
 open-im-sdk-core.*
 OpenIM_*

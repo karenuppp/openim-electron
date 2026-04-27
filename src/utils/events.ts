@@ -13,11 +13,15 @@ type EmitterEvents = {
   OPEN_CHOOSE_MODAL: ChooseModalState;
   CHAT_LIST_SCROLL_TO_BOTTOM: void;
   OPEN_RTC_MODAL: InviteData;
-  // message store
+
   PUSH_NEW_MSG: MessageItem;
   UPDATE_ONE_MSG: MessageItem;
 
   SELECT_USER: SelectUserParams;
+
+  JUMP_TO_MESSAGE: string;
+  MSG_REVOKED: string;
+  FEEDBACK_TOAST: { msg: string; type?: "success" | "error" };
 };
 
 export type SelectUserParams = {

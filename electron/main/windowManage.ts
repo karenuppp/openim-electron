@@ -40,9 +40,9 @@ export function createMainWindow() {
     titleBarStyle: "hiddenInset",
     webPreferences: {
       preload: global.pathConfig.preload,
-      // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
-      // Consider using contextBridge.exposeInMainWorld
-      // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
+
+
+
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false,
@@ -51,21 +51,36 @@ export function createMainWindow() {
     },
   });
 
+
+  if (process.env.VITE_DEV_SERVER_URL) {
+    mainWindow.webContents.openDevTools({ mode: "detach" });
+  }
+
   sdkInstance = initIMSDK(mainWindow.webContents);
 
   if (process.env.VITE_DEV_SERVER_URL) {
-    // Open devTool if the app is not packaged
-    mainWindow.loadURL(url);
+
+    console.log("[windowManage] loading URL:", url);
+    mainWindow.loadURL(url).then(() => {
+      console.log("[windowManage] URL loaded successfully");
+    }).catch((err) => {
+      console.error("[windowManage] Failed to load URL:", err);
+    });
   } else {
-    mainWindow.loadFile(global.pathConfig.indexHtml);
+    console.log("[windowManage] loading file:", global.pathConfig.indexHtml);
+    mainWindow.loadFile(global.pathConfig.indexHtml).then(() => {
+      console.log("[windowManage] File loaded successfully");
+    }).catch((err) => {
+      console.error("[windowManage] Failed to load file:", err);
+    });
   }
 
-  // Test actively push message to the Electron-Renderer
+
   mainWindow.webContents.on("did-finish-load", () => {
     mainWindow?.webContents.send("main-process-message", new Date().toLocaleString());
   });
 
-  // // Make all links open with the browser, not with the application
+
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith("https:") || url.startsWith("http:")) shell.openExternal(url);
     return { action: "deny" };
@@ -100,7 +115,6 @@ export function splashEnd() {
   mainWindow?.show();
 }
 
-// utils
 export const isExistMainWindow = (): boolean =>
   !!mainWindow && !mainWindow?.isDestroyed();
 export const isShowMainWindow = (): boolean => {
@@ -228,7 +242,7 @@ export const toggleDevTools = () => {
 export const setFullScreen = (isFullscreen: boolean): boolean => {
   if (!mainWindow) return false;
   if (isLinux) {
-    // linux It needs to be resizable before it can be full screen
+
     if (isFullscreen) {
       mainWindow.setResizable(isFullscreen);
       mainWindow.setFullScreen(isFullscreen);

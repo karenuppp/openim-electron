@@ -429,7 +429,7 @@ const workerFunction = () => {
 
     const arraySearch = (l1: string) => {
       for (const name in PinYin) {
-        // @ts-ignore
+
         if ((PinYin[name] as string).indexOf(l1) !== -1) {
           return ucfirst(name);
         }
@@ -461,7 +461,7 @@ const workerFunction = () => {
     const arr = [];
 
     for (i = 0; i < data.length; i++) {
-      // @ts-ignore
+
       const firstName = (data[i].initial = codefans(data[i][key]).substr(0, 1));
       arr.push(firstName.toUpperCase());
     }
@@ -473,7 +473,7 @@ const workerFunction = () => {
       }
     }
 
-    // @ts-ignore
+
     const dataSort = [] as any[];
     for (i = 0; i < arrlist.length; i++) {
       dataSort[i] = {
@@ -481,7 +481,7 @@ const workerFunction = () => {
       };
       dataSort[i].data = [];
       for (j = 0; j < data.length; j++) {
-        // @ts-ignore
+
         if (data[j].initial.toUpperCase() === dataSort[i].initial) {
           dataSort[i].data.push(data[j]);
         }
@@ -524,15 +524,12 @@ const workerFunction = () => {
   self.onmessage = (e) => self.postMessage(formatContacts(e.data));
 };
 
-// 将函数转换为字符串，并创建一个Blob
 const blob = new Blob(["(" + workerFunction + ")()"], {
   type: "application/javascript",
 });
 
-// 创建一个指向该Blob的URL
 const workerUrl = URL.createObjectURL(blob);
 
-// 使用这个URL创建一个新的Web Worker
 const worker = new Worker(workerUrl);
 
 type ContactsData = {

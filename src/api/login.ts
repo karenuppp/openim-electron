@@ -15,7 +15,6 @@ const platform = window.electronAPI?.getPlatform() ?? 5;
 const getAreaCode = (code?: string) =>
   code ? (code.includes("+") ? code : `+${code}`) : code;
 
-// Send verification code
 export const useSendSms = () => {
   return useMutation(
     (params: API.Login.SendSmsParams) =>
@@ -36,7 +35,6 @@ export const useSendSms = () => {
   );
 };
 
-// Verify mobile phone number
 export const useVerifyCode = () => {
   return useMutation(
     (params: API.Login.VerifyCodeParams) =>
@@ -58,7 +56,6 @@ export const useVerifyCode = () => {
   );
 };
 
-// register
 export const useRegister = () => {
   return useMutation(
     (params: API.Login.DemoRegisterType) =>
@@ -84,7 +81,6 @@ export const useRegister = () => {
   );
 };
 
-// reset passwords
 export const useReset = () => {
   return useMutation(
     (params: API.Login.ResetParams) =>
@@ -106,7 +102,6 @@ export const useReset = () => {
   );
 };
 
-// change password
 export const modifyPassword = async (params: API.Login.ModifyParams) => {
   const token = (await getChatToken()) as string;
   return request.post(
@@ -123,7 +118,6 @@ export const modifyPassword = async (params: API.Login.ModifyParams) => {
   );
 };
 
-// log in
 export const useLogin = () => {
   return useMutation(
     (params: API.Login.LoginParams) =>
@@ -146,7 +140,6 @@ export const useLogin = () => {
   );
 };
 
-// Get user information
 export interface BusinessUserInfo {
   userID: string;
   password: string;

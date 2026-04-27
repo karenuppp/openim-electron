@@ -16,4 +16,5 @@ export const IpcRenderToMain = {
   getDataPath: "getDataPath",
   captureScreen: "capture-screen",
   openFile: "open-file",
+  downloadFile: "download-file",
 };

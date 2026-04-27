@@ -61,10 +61,12 @@ i18n.on("languageChanged", () => {
 const SendActionBar = ({
   sendMessage,
   getImageMessage,
+  getImageMessageByPath,
   getFileMessage,
 }: {
   sendMessage: (params: SendMessageParams) => Promise<void>;
   getImageMessage: (file: File) => Promise<MessageItem>;
+  getImageMessageByPath: (filePath: string, fileName: string) => Promise<MessageItem>;
   getFileMessage: (file: File) => Promise<MessageItem>;
 }) => {
   const [visibleState, setVisibleState] = useState(false);
@@ -85,17 +87,24 @@ const SendActionBar = ({
   };
 
   const screenshotHandle = async () => {
-    if (!window.electronAPI) return;
+    if (!window.electronAPI) {
+      console.error("[screenshot] no electronAPI");
+      return;
+    }
     try {
       const filePath = await window.electronAPI.ipcInvoke("capture-screen");
-      if (!filePath) return;
-      const message = await getFileMessage({
-        path: filePath,
-        name: `screenshot_${Date.now()}.png`,
-      } as unknown as File);
+      console.log("[screenshot] filePath:", filePath);
+      if (!filePath) {
+        console.log("[screenshot] filePath is null/empty, returning early");
+        return;
+      }
+
+
+      const message = await getImageMessageByPath(filePath as string, `screenshot_${Date.now()}.png`);
+      console.log("[screenshot] message created:", message?.clientMsgID);
       sendMessage({ message });
     } catch (e) {
-      console.error("screenshot failed", e);
+      console.error("[screenshot] failed:", e);
     }
   };
 
@@ -115,7 +124,7 @@ const SendActionBar = ({
           title: null,
           arrow: false,
           trigger: "click",
-          // @ts-ignore
+
           open: action.comp ? visibleState : false,
           onOpenChange: (visible) => setVisibleState(visible),
         };

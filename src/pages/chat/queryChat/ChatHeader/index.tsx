@@ -2,7 +2,7 @@ import { SessionType } from "@openim/wasm-client-sdk";
 import { Layout, Tooltip } from "antd";
 import clsx from "clsx";
 import i18n, { t } from "i18next";
-import { memo, useEffect, useRef } from "react";
+import { FC, memo, useEffect, useRef } from "react";
 
 import group_member from "@/assets/images/chatHeader/group_member.png";
 import launch_group from "@/assets/images/chatHeader/launch_group.png";
@@ -39,7 +39,9 @@ i18n.on("languageChanged", () => {
   menuList[2].title = t("placeholder.setting");
 });
 
-const ChatHeader = () => {
+interface ChatHeaderProps {}
+
+const ChatHeader: FC<ChatHeaderProps> = () => {
   const singleSettingRef = useRef<OverlayVisibleHandle>(null);
   const groupSettingRef = useRef<OverlayVisibleHandle>(null);
 
@@ -54,7 +56,7 @@ const ChatHeader = () => {
     Boolean(state.currentMemberInGroup?.groupID),
   );
 
-  // locale re render
+
   useUserStore((state) => state.appSettings.locale);
 
   useEffect(() => {

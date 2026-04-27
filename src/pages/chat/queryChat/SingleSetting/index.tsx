@@ -13,8 +13,6 @@ import { feedbackToast } from "@/utils/common";
 import { emit } from "@/utils/events";
 import { useConversationStore } from "@/store";
 
-// export interface SingleSettingProps {}
-
 const SingleSetting: ForwardRefRenderFunction<OverlayVisibleHandle, unknown> = (
   _,
   ref,

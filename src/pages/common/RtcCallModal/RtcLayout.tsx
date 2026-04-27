@@ -95,7 +95,7 @@ export const RtcLayout = ({
             isWaiting={isWaiting}
             isRecv={isRecv}
             isConnected={isConnected}
-            // @ts-ignore
+
             invitation={inviteData?.invitation}
             closeOverlay={closeOverlay}
             connectRtc={connectRtc}

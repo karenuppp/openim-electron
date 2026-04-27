@@ -8,6 +8,8 @@ import { formatMessageTime } from "@/utils/imCommon";
 import CatchMessageRender from "./CatchMsgRenderer";
 import FileMessageRender from "./FileMessageRender";
 import MediaMessageRender from "./MediaMessageRender";
+import MessageContextMenu from "./MessageContextMenu";
+import QuoteMessageRender from "./QuoteMessageRender";
 import styles from "./message-item.module.scss";
 import MessageItemErrorBoundary from "./MessageItemErrorBoundary";
 import MessageSuffix from "./MessageSuffix";
@@ -25,6 +27,7 @@ const components: Record<number, FC<IMessageItemProps>> = {
   [MessageType.TextMessage]: TextMessageRender,
   [MessageType.PictureMessage]: MediaMessageRender,
   [MessageType.FileMessage]: FileMessageRender,
+  [MessageType.QuoteMessage]: QuoteMessageRender,
 };
 
 const MessageItem: FC<IMessageItemProps> = ({
@@ -45,57 +48,59 @@ const MessageItem: FC<IMessageItemProps> = ({
 
   return (
     <>
-      <div
-        id={`chat_${message.clientMsgID}`}
-        className={clsx("relative flex select-text px-5 py-3")}
-      >
+      <MessageContextMenu message={message}>
         <div
-          className={clsx(
-            styles["message-container"],
-            isSender && styles["message-container-sender"],
-          )}
+          id={`chat_${message.clientMsgID}`}
+          className={clsx("relative flex select-text px-5 py-3")}
         >
-          <OIMAvatar
-            size={36}
-            src={message.senderFaceUrl}
-            text={message.senderNickname}
-          />
+          <div
+            className={clsx(
+              styles["message-container"],
+              isSender && styles["message-container-sender"],
+            )}
+          >
+            <OIMAvatar
+              size={36}
+              src={message.senderFaceUrl}
+              text={message.senderNickname}
+            />
 
-          <div className={styles["message-wrap"]} ref={messageWrapRef}>
-            <div className={styles["message-profile"]}>
-              <div
-                title={message.senderNickname}
-                className={clsx(
-                  "max-w-[30%] truncate text-[var(--sub-text)]",
-                  isSender ? "ml-2" : "mr-2",
-                )}
-              >
-                {message.senderNickname}
+            <div className={styles["message-wrap"]} ref={messageWrapRef}>
+              <div className={styles["message-profile"]}>
+                <div
+                  title={message.senderNickname}
+                  className={clsx(
+                    "max-w-[30%] truncate text-[var(--sub-text)]",
+                    isSender ? "ml-2" : "mr-2",
+                  )}
+                >
+                  {message.senderNickname}
+                </div>
+                <div className="text-[var(--sub-text)]">
+                  {formatMessageTime(message.sendTime)}
+                </div>
               </div>
-              <div className="text-[var(--sub-text)]">
-                {formatMessageTime(message.sendTime)}
-              </div>
-            </div>
 
-            <div className={styles["menu-wrap"]}>
-              <MessageItemErrorBoundary message={message}>
-                <MessageRenderComponent
+              <div className={styles["menu-wrap"]}>
+                <MessageItemErrorBoundary message={message}>
+                  <MessageRenderComponent
+                    message={message}
+                    isSender={isSender}
+                    disabled={disabled}
+                  />
+                </MessageItemErrorBoundary>
+
+                <MessageSuffix
                   message={message}
                   isSender={isSender}
-                  disabled={disabled}
+                  disabled={false}
+                  conversationID={conversationID}
                 />
-              </MessageItemErrorBoundary>
-
-              <MessageSuffix
-                message={message}
-                isSender={isSender}
-                disabled={false}
-                conversationID={conversationID}
-              />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </MessageContextMenu>
     </>
   );
 };

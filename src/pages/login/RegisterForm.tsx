@@ -35,7 +35,7 @@ const RegisterForm = ({ loginMethod, setFormType }: RegisterFormProps) => {
   const { mutate: verifySmsCode } = useVerifyCode();
   const { mutate: register } = useRegister();
 
-  // 0login 1resetPassword 2register
+
   const [registerForm, setRegisterForm] = useState(0);
 
   const [code, setCode] = useState(["", "", "", "", "", ""]);

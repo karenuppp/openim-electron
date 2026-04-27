@@ -11,14 +11,15 @@ import emitter from "@/utils/events";
 import MessageItem from "./MessageItem";
 import NotificationMessage from "./NotificationMessage";
 import { useHistoryMessageList } from "./useHistoryMessageList";
+import { setVirtuosoRef } from "./virtuosoRef";
 
 const ChatContent = () => {
-  const virtuoso = useRef<VirtuosoHandle>(null);
+  const virtuosoRef = useRef<VirtuosoHandle>(null);
   const selfUserID = useUserStore((state) => state.selfInfo.userID);
 
   const scrollToBottom = () => {
     setTimeout(() => {
-      virtuoso.current?.scrollToIndex({
+      virtuosoRef.current?.scrollToIndex({
         index: 9999,
         align: "end",
         behavior: "auto",
@@ -26,13 +27,33 @@ const ChatContent = () => {
     });
   };
 
-  const { SPLIT_COUNT, conversationID, loadState, moreOldLoading, getMoreOldMessages } =
+  const { SPLIT_COUNT, conversationID, loadState, moreOldLoading, getMoreOldMessages, jumpToMessage } =
     useHistoryMessageList();
 
   useEffect(() => {
+    if (virtuosoRef.current) {
+      setVirtuosoRef(virtuosoRef.current);
+    }
+  }, []);
+
+
+  const jumpRef = useRef(jumpToMessage);
+  useEffect(() => {
+    jumpRef.current = jumpToMessage;
+  }, [jumpToMessage]);
+
+  useEffect(() => {
     emitter.on("CHAT_LIST_SCROLL_TO_BOTTOM", scrollToBottom);
+
+
+    const handleJumpToMessage = (clientMsgID: string) => {
+      jumpRef.current(clientMsgID);
+    };
+    emitter.on("JUMP_TO_MESSAGE", handleJumpToMessage);
+
     return () => {
       emitter.off("CHAT_LIST_SCROLL_TO_BOTTOM", scrollToBottom);
+      emitter.off("JUMP_TO_MESSAGE", handleJumpToMessage);
     };
   }, []);
 
@@ -59,7 +80,7 @@ const ChatContent = () => {
           firstItemIndex={loadState.firstItemIndex}
           initialTopMostItemIndex={SPLIT_COUNT - 1}
           startReached={loadMoreMessage}
-          ref={virtuoso}
+          ref={virtuosoRef}
           data={loadState.messageList}
           components={{
             Header: () =>

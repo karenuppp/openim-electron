@@ -29,7 +29,7 @@ export const useContactStore = create<ContactStore>()((set, get) => ({
       let offset = 0;
       let tmpList = [] as FriendUserItem[];
       let initialFetch = true;
-      // eslint-disable-next-line
+
       while (true) {
         const count = initialFetch ? 10000 : 1000;
         const { data } = await IMSDK.getFriendListPage({
@@ -102,7 +102,7 @@ export const useContactStore = create<ContactStore>()((set, get) => ({
     try {
       let offset = 0;
       let tmpList = [] as GroupItem[];
-      // eslint-disable-next-line
+
       while (true) {
         const { data } = await IMSDK.getJoinedGroupListPage({ offset, count: 1000 });
         tmpList = [...tmpList, ...data];
@@ -110,7 +110,7 @@ export const useContactStore = create<ContactStore>()((set, get) => ({
         if (data.length < 1000) break;
       }
 
-      // const { data } = await IMSDK.getJoinedGroupList();
+
       set(() => ({ groupList: tmpList }));
     } catch (error) {
       feedbackToast({ error, msg: t("toast.getGroupListFailed") });

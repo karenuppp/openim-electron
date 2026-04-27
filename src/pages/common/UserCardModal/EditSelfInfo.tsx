@@ -90,7 +90,7 @@ const EditSelfInfo: ForwardRefRenderFunction<
             <Form.Item
               label={t("placeholder.phoneNumber")}
               name="phoneNumber"
-              // rules={[{ pattern: /^1[3-9]\d{9}$/, message: t("placeholder.inputCorrectPhoneNumber") }]}
+
             >
               <Input disabled />
             </Form.Item>

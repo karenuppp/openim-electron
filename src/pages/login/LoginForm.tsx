@@ -18,7 +18,6 @@ import { areaCode } from "./areaCode";
 import type { FormType } from "./index";
 import styles from "./index.module.scss";
 
-// 0login 1resetPassword 2register
 enum LoginType {
   Password,
   VerifyCode,

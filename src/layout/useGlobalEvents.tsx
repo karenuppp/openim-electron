@@ -35,7 +35,7 @@ export function useGlobalEvent() {
   const navigate = useNavigate();
   const resume = useRef(false);
 
-  // user
+
   const updateSyncState = useUserStore((state) => state.updateSyncState);
   const updateProgressState = useUserStore((state) => state.updateProgressState);
   const updateReinstallState = useUserStore((state) => state.updateReinstallState);
@@ -43,7 +43,7 @@ export function useGlobalEvent() {
   const updateConnectState = useUserStore((state) => state.updateConnectState);
   const updateSelfInfo = useUserStore((state) => state.updateSelfInfo);
   const userLogout = useUserStore((state) => state.userLogout);
-  // conversation
+
   const updateConversationList = useConversationStore(
     (state) => state.updateConversationList,
   );
@@ -69,7 +69,7 @@ export function useGlobalEvent() {
   const getUnReadCountByReq = useConversationStore(
     (state) => state.getUnReadCountByReq,
   );
-  // contact
+
   const getFriendListByReq = useContactStore((state) => state.getFriendListByReq);
   const getGroupListByReq = useContactStore((state) => state.getGroupListByReq);
   const updateFriend = useContactStore((state) => state.updateFriend);
@@ -161,7 +161,7 @@ export function useGlobalEvent() {
   };
 
   const setIMListener = () => {
-    // account
+
     IMSDK.on(CbEvents.OnSelfInfoUpdated, selfUpdateHandler);
     IMSDK.on(CbEvents.OnConnecting, connectingHandler);
     IMSDK.on(CbEvents.OnConnectFailed, connectFailedHandler);
@@ -169,26 +169,26 @@ export function useGlobalEvent() {
     IMSDK.on(CbEvents.OnKickedOffline, kickHandler);
     IMSDK.on(CbEvents.OnUserTokenExpired, expiredHandler);
     IMSDK.on(CbEvents.OnUserTokenInvalid, expiredHandler);
-    // sync
+
     IMSDK.on(CbEvents.OnSyncServerStart, syncStartHandler);
     IMSDK.on(CbEvents.OnSyncServerProgress, syncProgressHandler);
     IMSDK.on(CbEvents.OnSyncServerFinish, syncFinishHandler);
     IMSDK.on(CbEvents.OnSyncServerFailed, syncFailedHandler);
-    // message
+
     IMSDK.on(CbEvents.OnRecvNewMessages, newMessageHandler);
     IMSDK.on(CbEvents.OnNewRecvMessageRevoked, revokedMessageHandler);
-    // conversation
+
     IMSDK.on(CbEvents.OnConversationChanged, conversationChnageHandler);
     IMSDK.on(CbEvents.OnNewConversation, newConversationHandler);
     IMSDK.on(CbEvents.OnTotalUnreadMessageCountChanged, totalUnreadChangeHandler);
-    // friend
+
     IMSDK.on(CbEvents.OnFriendInfoChanged, friednInfoChangeHandler);
     IMSDK.on(CbEvents.OnFriendAdded, friednAddedHandler);
     IMSDK.on(CbEvents.OnFriendDeleted, friednDeletedHandler);
-    // blacklist
+
     IMSDK.on(CbEvents.OnBlackAdded, blackAddedHandler);
     IMSDK.on(CbEvents.OnBlackDeleted, blackDeletedHandler);
-    // group
+
     IMSDK.on(CbEvents.OnJoinedGroupAdded, joinedGroupAddedHandler);
     IMSDK.on(CbEvents.OnJoinedGroupDeleted, joinedGroupDeletedHandler);
     IMSDK.on(CbEvents.OnGroupDismissed, joinedGroupDismissHandler);
@@ -196,7 +196,7 @@ export function useGlobalEvent() {
     IMSDK.on(CbEvents.OnGroupMemberAdded, groupMemberAddedHandler);
     IMSDK.on(CbEvents.OnGroupMemberDeleted, groupMemberDeletedHandler);
     IMSDK.on(CbEvents.OnGroupMemberInfoChanged, groupMemberInfoChangedHandler);
-    // application
+
     IMSDK.on(CbEvents.OnFriendApplicationAdded, friendApplicationProcessedHandler);
     IMSDK.on(CbEvents.OnFriendApplicationAccepted, friendApplicationProcessedHandler);
     IMSDK.on(CbEvents.OnFriendApplicationRejected, friendApplicationProcessedHandler);
@@ -236,7 +236,7 @@ export function useGlobalEvent() {
       },
     });
 
-  // sync
+
   const syncStartHandler = ({ data }: WSEvent<boolean>) => {
     updateSyncState("loading");
     updateReinstallState(data);
@@ -256,7 +256,7 @@ export function useGlobalEvent() {
     feedbackToast({ msg: t("toast.syncFailed"), error: t("toast.syncFailed") });
   };
 
-  // message
+
   const newMessageHandler = ({ data }: WSEvent<MessageItem[]>) => {
     if (useUserStore.getState().syncState === "loading" || resume.current) {
       return;
@@ -320,7 +320,7 @@ export function useGlobalEvent() {
     }
   };
 
-  // conversation
+
   const conversationChnageHandler = ({ data }: WSEvent<ConversationItem[]>) => {
     updateConversationList(data, "filter");
   };
@@ -332,7 +332,7 @@ export function useGlobalEvent() {
     updateUnReadCount(data);
   };
 
-  // friend
+
   const friednInfoChangeHandler = ({ data }: WSEvent<FriendUserItem>) => {
     updateFriend(data);
   };
@@ -343,7 +343,7 @@ export function useGlobalEvent() {
     updateFriend(data, true);
   };
 
-  // blacklist
+
   const blackAddedHandler = ({ data }: WSEvent<BlackUserItem>) => {
     pushNewBlack(data);
   };
@@ -358,7 +358,7 @@ export function useGlobalEvent() {
     updateBlack(data, true);
   };
 
-  // group
+
   const joinedGroupAddedHandler = ({ data }: WSEvent<GroupItem>) => {
     if (data.groupID === useConversationStore.getState().currentConversation?.groupID) {
       updateCurrentGroupInfo(data);
@@ -406,7 +406,7 @@ export function useGlobalEvent() {
     }
   };
 
-  //application
+
   const friendApplicationProcessedHandler = ({
     data,
   }: WSEvent<FriendApplicationItem>) => {
@@ -436,25 +436,25 @@ export function useGlobalEvent() {
     IMSDK.off(CbEvents.OnKickedOffline, kickHandler);
     IMSDK.off(CbEvents.OnUserTokenExpired, expiredHandler);
     IMSDK.off(CbEvents.OnUserTokenInvalid, expiredHandler);
-    // sync
+
     IMSDK.off(CbEvents.OnSyncServerStart, syncStartHandler);
     IMSDK.off(CbEvents.OnSyncServerProgress, syncProgressHandler);
     IMSDK.off(CbEvents.OnSyncServerFinish, syncFinishHandler);
     IMSDK.off(CbEvents.OnSyncServerFailed, syncFailedHandler);
-    // message
+
     IMSDK.off(CbEvents.OnRecvNewMessages, newMessageHandler);
-    // conversation
+
     IMSDK.off(CbEvents.OnConversationChanged, conversationChnageHandler);
     IMSDK.off(CbEvents.OnNewConversation, newConversationHandler);
     IMSDK.off(CbEvents.OnTotalUnreadMessageCountChanged, totalUnreadChangeHandler);
-    // friend
+
     IMSDK.off(CbEvents.OnFriendInfoChanged, friednInfoChangeHandler);
     IMSDK.off(CbEvents.OnFriendAdded, friednAddedHandler);
     IMSDK.off(CbEvents.OnFriendDeleted, friednDeletedHandler);
-    // blacklist
+
     IMSDK.off(CbEvents.OnBlackAdded, blackAddedHandler);
     IMSDK.off(CbEvents.OnBlackDeleted, blackDeletedHandler);
-    // group
+
     IMSDK.off(CbEvents.OnJoinedGroupAdded, joinedGroupAddedHandler);
     IMSDK.off(CbEvents.OnJoinedGroupDeleted, joinedGroupDeletedHandler);
     IMSDK.off(CbEvents.OnGroupDismissed, joinedGroupDismissHandler);
@@ -462,7 +462,7 @@ export function useGlobalEvent() {
     IMSDK.off(CbEvents.OnGroupMemberAdded, groupMemberAddedHandler);
     IMSDK.off(CbEvents.OnGroupMemberDeleted, groupMemberDeletedHandler);
     IMSDK.off(CbEvents.OnGroupMemberInfoChanged, groupMemberInfoChangedHandler);
-    // application
+
     IMSDK.off(CbEvents.OnFriendApplicationAdded, friendApplicationProcessedHandler);
     IMSDK.off(CbEvents.OnFriendApplicationAccepted, friendApplicationProcessedHandler);
     IMSDK.off(CbEvents.OnFriendApplicationRejected, friendApplicationProcessedHandler);

@@ -46,9 +46,9 @@ export const bytesToSize = (bytes: number) => {
 };
 
 export const secondsToTime = (seconds: number) => {
-  let minutes = 0; // min
-  let hours = 0; // hour
-  let days = 0; // day
+  let minutes = 0;
+  let hours = 0;
+  let days = 0;
   if (seconds > 60) {
     minutes = parseInt((seconds / 60) as unknown as string);
     seconds = parseInt((seconds % 60) as unknown as string);

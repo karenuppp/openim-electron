@@ -5,7 +5,12 @@
   appId: "io.opencorp.desktop.base",
   productName: "OpenCorp-Base",
   asar: true,
-  asarUnpack: ["**/*.node"],
+  asarUnpack: [
+    "**/*.node",
+    "**/node-screenshots-darwin-*/**",
+    "**/react-screenshots/**",
+    "**/node-screenshots/**",
+  ],
   extends: null,
   directories: {
     output: "release/Base/${version}",
@@ -43,6 +48,10 @@
       {
         from: "node_modules/koffi/build/koffi/darwin_${arch}/",
         to: "koffi/darwin_${arch}",
+      },
+      {
+        from: "node_modules/node-screenshots-darwin-arm64/",
+        to: "app.asar.unpacked/node_modules/node-screenshots-darwin-arm64",
       },
     ],
   },
