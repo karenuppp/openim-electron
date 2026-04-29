@@ -5,16 +5,17 @@ import { forwardRef, ForwardRefRenderFunction, memo, useRef, useState, useEffect
 
 import { MessageType, MessageItem } from "@openim/wasm-client-sdk";
 import { IMSDK } from "@/layout/MainContentWrap";
-import CKEditor from "@/components/CKEditor";
-import { getCleanText, getMessagePreview } from "@/components/CKEditor/utils";
+import CKEditor, { CKEditorRef } from "@/components/CKEditor";
+import { getCleanText } from "@/components/CKEditor/utils";
 import i18n from "@/i18n";
 import { feedbackToast } from "@/utils/common";
 import { useChatStore } from "@/store/chat";
 import { useConversationStore } from "@/store";
 
 import SendActionBar from "./SendActionBar";
-import { useFileMessage, FileWithPath } from "./SendActionBar/useFileMessage";
+import { FileWithPath } from "./SendActionBar/useFileMessage";
 import { useSendMessage } from "./useSendMessage";
+import { useFileMessage } from "./SendActionBar/useFileMessage";
 
 const sendActions = [
   { label: t("placeholder.sendWithEnter"), key: "enter" },
@@ -26,44 +27,79 @@ i18n.on("languageChanged", () => {
   sendActions[1].label = t("placeholder.sendWithShiftEnter");
 });
 
-interface ScreenshotPreview {
-  dataUrl: string;
-  filePath: string;
-}
-
 const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
   const [html, setHtml] = useState("");
   const latestHtml = useLatest(html);
 
   const currentConversationID = useConversationStore((s) => s.currentConversation?.conversationID);
   const prevConversationIDRef = useRef<string | undefined>(currentConversationID);
-  const { getImageMessage, getImageMessageByPath, getFileMessage } = useFileMessage();
+  const { getImageMessage, getFileMessage } = useFileMessage();
   const { sendMessage } = useSendMessage();
   const quoteMessage = useChatStore((s) => s.quoteMessage);
   const setQuoteMessage = useChatStore((s) => s.setQuoteMessage);
 
-  // Screenshot previews stored separately from CKEditor HTML
-  const [screenshotPreviews, setScreenshotPreviews] = useState<ScreenshotPreview[]>([]);
-  const [sendingScreenshot, setSendingScreenshot] = useState(false);
+  // Track screenshot file paths for upload
+  const [screenshotPaths, setScreenshotPaths] = useState<string[]>([]);
+
+  const ckEditorRef = useRef<CKEditorRef>(null);
 
   useEffect(() => {
     if (prevConversationIDRef.current && currentConversationID && prevConversationIDRef.current !== currentConversationID) {
       setQuoteMessage(null);
-      clearScreenshots();
+      clearAll();
     }
     prevConversationIDRef.current = currentConversationID;
   }, [currentConversationID, setQuoteMessage]);
 
-  const addScreenshotPreview = (dataUrl: string, filePath: string) => {
-    setScreenshotPreviews(prev => [...prev, { dataUrl, filePath }]);
+  // Extract all embedded images from CKEditor view DOM as File objects for upload
+  const getAllImagesAsFiles = async (): Promise<File[]> => {
+    const editorInstance = ckEditorRef.current?.editor;
+    if (!editorInstance) return [];
+
+    const files: File[] = [];
+    try {
+      const domRoot = editorInstance.editing.view.domRoot.element;
+      if (!domRoot) return files;
+
+      // Find all img elements in the CKEditor view DOM (AutoImage renders inline images as <img>)
+      const imgElements = Array.from(domRoot.querySelectorAll("img")) as HTMLImageElement[];
+
+      for (let i = 0; i < imgElements.length; i++) {
+        const img = imgElements[i];
+        let src = img.getAttribute("src") || "";
+
+        // Skip external URLs, only handle data URLs (base64 images)
+        if (!src.startsWith("data:")) continue;
+
+        try {
+          // Convert base64 data URL to File object
+          const [header, data] = src.split(",");
+          const mimeType = header.match(/:(.*?);/)?.[1] || "image/png";
+          const byteString = atob(data);
+          const ab = new ArrayBuffer(byteString.length);
+          const ua = new Uint8Array(ab);
+          for (let j = 0; j < byteString.length; j++) {
+            ua[j] = byteString.charCodeAt(j);
+          }
+
+          const blob = new Blob([ab], { type: mimeType });
+          files.push(new File([blob], `screenshot_${Date.now()}_${i}.png`, { type: mimeType }));
+        } catch (e) {
+          console.error("[getAllImagesAsFiles] failed:", e);
+        }
+      }
+    } catch (e) {
+      console.error("[getAllImagesAsFiles] error:", e);
+    }
+    return files;
   };
 
-  const removeScreenshotPreview = (index: number) => {
-    setScreenshotPreviews(prev => prev.filter((_, i) => i !== index));
+  const addScreenshotPath = (filePath: string) => {
+    setScreenshotPaths(prev => [...prev, filePath]);
   };
 
-  const clearScreenshots = () => {
-    setScreenshotPreviews([]);
+  const clearAll = () => {
+    setScreenshotPaths([]);
   };
 
   const onScreenshotStart = async (hideWindow: boolean) => {
@@ -76,10 +112,11 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
       const filePath = await window.electronAPI.ipcInvoke<string | null>(channel);
       if (!filePath) return;
 
-      // Load image as data URL for preview display (kept outside CKEditor)
+      // Load image as data URL and insert into CKEditor at cursor position
       const dataUrl = await window.electronAPI.ipcInvoke<string | null>("read-file-as-data-url", filePath);
-      if (dataUrl) {
-        addScreenshotPreview(dataUrl, filePath);
+      if (dataUrl && ckEditorRef.current) {
+        ckEditorRef.current.insertImage(dataUrl);
+        addScreenshotPath(filePath);
       } else {
         console.error("[screenshot] failed to read file as data URL");
       }
@@ -88,48 +125,32 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
     }
   };
 
-  const sendScreenshots = async () => {
-    if (screenshotPreviews.length === 0) return false;
+  const sendAll = async () => {
+    // Upload all images from CKEditor DOM (both screenshots and pasted images)
+    const imageFiles = await getAllImagesAsFiles();
 
-    setSendingScreenshot(true);
-    try {
-      for (const preview of screenshotPreviews) {
-        console.log("[screenshot] sending:", preview.filePath);
-        const message = await getImageMessageByPath(preview.filePath, `screenshot_${Date.now()}.png`);
-        await sendMessage({ message });
+    for (const file of imageFiles) {
+      console.log("[send] uploading screenshot:", file.name);
+      try {
+        const message = await getImageMessage(file as FileWithPath);
+        sendMessage({ message });
+      } catch (e) {
+        console.error("[send] screenshot upload failed:", e);
+        feedbackToast(t("placeholder.sendFailed") || "发送失败");
+        return;
       }
-
-      // Clear all screenshots after successful send
-      setScreenshotPreviews([]);
-      
-      return true; // sent screenshots
-    } catch (e) {
-      console.error("[screenshot] send failed:", e);
-      feedbackToast({ msg: t("placeholder.sendFailed") || "发送失败" });
-      setSendingScreenshot(false);
-      return false;
-    }
-  };
-
-  const onChange = (value: string) => {
-    setHtml(value);
-  };
-
-  const enterToSend = async () => {
-    // Send screenshots first if any exist
-    if (screenshotPreviews.length > 0 && !sendingScreenshot) {
-      await sendScreenshots();
     }
 
     const cleanText = getCleanText(latestHtml.current ?? '');
-    
-    // If we just sent screenshots and there's no text, don't do anything else
-    if (!cleanText) return;
+
+    if (!cleanText && imageFiles.length === 0) {
+      // Nothing to send
+      return;
+    }
 
     let message: MessageItem;
     if (quoteMessage) {
       const original = quoteMessage as MessageItem;
-      
       const textResult = await IMSDK.createTextMessage(cleanText);
       message = textResult.data as MessageItem;
       (message as any).contentType = MessageType.QuoteMessage;
@@ -141,9 +162,27 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
     } else {
       message = (await IMSDK.createTextMessage(cleanText)).data;
     }
+
+    clearAll();
     setHtml("");
     setQuoteMessage(null);
     sendMessage({ message });
+  };
+
+  const enterToSend = async () => {
+    await sendAll();
+  };
+
+  const onChange = (value: string) => {
+    // Sync screenshotPaths count with number of <img> tags in HTML
+    const imgCount = (value.match(/<img[\s\S]*?>/gi) || []).length;
+    setScreenshotPaths(prev => {
+      if (prev.length === imgCount) return prev;
+      if (imgCount < prev.length) return prev.slice(0, imgCount);
+      // New images beyond tracked count — ignore (pasted URLs via AutoImage)
+      return prev;
+    });
+    setHtml(value);
   };
 
   const handleDrop = async (e: React.DragEvent) => {
@@ -154,7 +193,7 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
     for (const file of files) {
       const isImage = file.type.startsWith("image/");
       const message = isImage
-        ? await getImageMessage(file)
+        ? await getImageMessage(file as FileWithPath)
         : await getFileMessage(file as FileWithPath);
       sendMessage({ message });
     }
@@ -168,43 +207,21 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
   return (
     <footer className="relative h-full bg-white py-px" onDrop={handleDrop} onDragOver={handleDragOver}>
       <div className="flex h-full flex-col border-t border-t-[var(--gap-text)]">
-        <SendActionBar sendMessage={sendMessage} getImageMessage={getImageMessage} getImageMessageByPath={getImageMessageByPath} getFileMessage={getFileMessage} onScreenshotStart={onScreenshotStart} />
+        <SendActionBar sendMessage={sendMessage} getImageMessage={getImageMessage} getFileMessage={getFileMessage} onScreenshotStart={onScreenshotStart} />
 
         {quoteMessage && (
           <div className="flex items-center gap-2 border-b border-[var(--border-color)] px-3 py-1.5 bg-[var(--bg-primary)]">
             <div className="flex-1 min-w-0">
               <div className="text-xs text-[var(--sub-text)] truncate">
-                引用 {quoteMessage.senderNickname}：{getMessagePreview(quoteMessage)}
+                引用 {quoteMessage.senderNickname}：{quoteMessage.textElem?.content || "[消息]"}
               </div>
             </div>
             <Button size="small" type="text" onClick={() => setQuoteMessage(null)}>✕</Button>
           </div>
         )}
 
-        {/* Screenshot preview row — rendered separately from CKEditor */}
-        {screenshotPreviews.length > 0 && (
-          <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
-            <span className="text-xs text-[var(--sub-text)]">{t("placeholder.screenshotPreview")}</span>
-            {screenshotPreviews.map((preview, index) => (
-              <div key={index} className="relative group inline-block rounded-lg overflow-hidden border border-[var(--border-color)]">
-                <img 
-                  src={preview.dataUrl} 
-                  alt="screenshot" 
-                  className="max-w-[120px] max-h-[80px] object-contain" 
-                />
-                <button
-                  onClick={() => removeScreenshotPreview(index)}
-                  className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-[10px]"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
         <div className="relative flex flex-1 flex-col overflow-hidden">
-          <CKEditor value={html} onEnter={enterToSend} onChange={onChange} />
+          <CKEditor ref={ckEditorRef} value={html} onEnter={enterToSend} onChange={onChange} placeholder={t("placeholder.chatInput") || "输入消息..."} />
           <div className="flex items-center justify-end py-2 pr-3">
             <Button className="w-fit px-6 py-1" type="primary" onClick={enterToSend}>
               {t("placeholder.send")}

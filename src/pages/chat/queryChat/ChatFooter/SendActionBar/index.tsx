@@ -61,13 +61,11 @@ i18n.on("languageChanged", () => {
 const SendActionBar = ({
   sendMessage,
   getImageMessage,
-  getImageMessageByPath,
   getFileMessage,
   onScreenshotStart,
 }: {
   sendMessage: (params: SendMessageParams) => Promise<void>;
   getImageMessage: (file: File) => Promise<MessageItem>;
-  getImageMessageByPath: (filePath: string, fileName: string) => Promise<MessageItem>;
   getFileMessage: (file: File) => Promise<MessageItem>;
   onScreenshotStart: (hideWindow: boolean) => void;
 }) => {

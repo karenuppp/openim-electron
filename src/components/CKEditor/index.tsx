@@ -4,6 +4,8 @@ import "ckeditor5/ckeditor5.css";
 import { ClassicEditor } from "@ckeditor/ckeditor5-editor-classic";
 import { Essentials } from "@ckeditor/ckeditor5-essentials";
 import { Paragraph } from "@ckeditor/ckeditor5-paragraph";
+import ImageInlineEditing from "@ckeditor/ckeditor5-image/src/image/imageinlineediting.js";
+import AutoImage from "@ckeditor/ckeditor5-image/src/autoimage.js";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import {
   forwardRef,
@@ -14,7 +16,9 @@ import {
 } from "react";
 
 export type CKEditorRef = {
+  editor: ClassicEditor | null;
   focus: (moveToEnd?: boolean) => void;
+  insertImage: (src: string) => void;
 };
 
 interface CKEditorProps {
@@ -42,20 +46,17 @@ const Index: ForwardRefRenderFunction<CKEditorRef, CKEditorProps> = (
 
   const focus = (moveToEnd = false) => {
     const editor = ckEditor.current;
-
-    if (editor) {
-      const model = editor.model;
-      const view = editor.editing.view;
-      const root = model.document.getRoot();
-      if (moveToEnd && root) {
-        const range = model.createRange(model.createPositionAt(root, "end"));
-
-        model.change((writer) => {
-          writer.setSelection(range);
-        });
-      }
-      view.focus();
+    if (!editor) return;
+    const model = editor.model;
+    const view = editor.editing.view;
+    const root = model.document.getRoot();
+    if (moveToEnd && root) {
+      const range = model.createRange(model.createPositionAt(root, "end"));
+      model.change((writer) => {
+        writer.setSelection(range);
+      });
     }
+    view.focus();
   };
 
   const listenKeydown = (editor: ClassicEditor) => {
@@ -87,7 +88,18 @@ const Index: ForwardRefRenderFunction<CKEditorRef, CKEditorProps> = (
   useImperativeHandle(
     ref,
     () => ({
+      editor: ckEditor.current,
       focus,
+      insertImage: (src: string) => {
+        const ed = ckEditor.current;
+        if (!ed) return;
+        try {
+          const imageUtils = ed.plugins.get("ImageUtils");
+          imageUtils.insertImage({ src });
+        } catch (e) {
+          console.error("[CKEditor insertImage] failed:", e);
+        }
+      },
     }),
     [],
   );
@@ -105,7 +117,7 @@ const Index: ForwardRefRenderFunction<CKEditorRef, CKEditorProps> = (
             type: "inline",
           },
         },
-        plugins: [Essentials, Paragraph],
+        plugins: [Essentials, Paragraph, ImageInlineEditing, AutoImage],
       }}
       onReady={(editor) => {
         ckEditor.current = editor;
@@ -120,4 +132,4 @@ const Index: ForwardRefRenderFunction<CKEditorRef, CKEditorProps> = (
   );
 };
 
-export default memo(forwardRef(Index));
+export default forwardRef(Index);
