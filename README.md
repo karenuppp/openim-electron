@@ -228,6 +228,7 @@ openim-electron-demo/
   - Face/emoji messages (custom emoji picker with twemoji)
 
 - **Quote Messages**: Click any message to quote → shows quoted content in input → sends as new message with nested `quoteElem` containing full original message metadata
+- **Screenshot Capture** (WeChat-style): Click screenshot icon in toolbar → choose capture mode → image appears as thumbnail preview in chat input box → user reviews then clicks Send button to send. Supports multiple screenshots per conversation. Screenshots auto-clear when switching conversations. IPC channels: `capture-screen-hide`, `read-file-as-data-url`
 
 ### Conversation Management
 
