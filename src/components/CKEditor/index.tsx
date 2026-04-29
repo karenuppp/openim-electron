@@ -94,10 +94,26 @@ const Index: ForwardRefRenderFunction<CKEditorRef, CKEditorProps> = (
         const ed = ckEditor.current;
         if (!ed) return;
         try {
-          const imageUtils = ed.plugins.get("ImageUtils");
-          imageUtils.insertImage({ src });
-        } catch (e) {
-          console.error("[CKEditor insertImage] failed:", e);
+          // Use model writer to insert a raw <img> element into the document
+          ed.model.change((writer: any) => {
+            const imgElement = writer.createElement("imageInline", { src });
+            const selection = ed.model.document.selection;
+            const position = selection.getFirstPosition();
+            if (position) {
+              writer.insert(imgElement, position);
+            }
+          });
+        } catch (e1) {
+          console.error("[CKEditor insertImage] model change failed:", e1);
+          try {
+            // Fallback: execute insertImage command
+            ed.execute("insertImage", { src });
+          } catch (e2) {
+            console.error("[CKEditor insertImage] both methods failed:", e2);
+            // Final fallback: setData
+            const currentData = ed.getData();
+            ed.setData(currentData + `<img src="${src}" />`);
+          }
         }
       },
     }),
