@@ -51,46 +51,135 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
     prevConversationIDRef.current = currentConversationID;
   }, [currentConversationID, setQuoteMessage]);
 
-  // Extract all embedded images from CKEditor view DOM as File objects for upload
+  // Extract all embedded images from CKEditor as File objects for upload.
+  // Tries multiple strategies for maximum reliability:
+  // 1. Model API (iterates imageInline nodes in the document tree)
+  // 2. DOM query (querySelectorAll on editing view root)
+  // 3. HTML parse (parse getData() output for <img> tags)
   const getAllImagesAsFiles = async (): Promise<File[]> => {
     const editorInstance = ckEditorRef.current?.editor;
     if (!editorInstance) return [];
 
     const files: File[] = [];
-    try {
-      const domRoot = editorInstance.editing.view.domRoot.element;
-      if (!domRoot) return files;
 
-      // Find all img elements in the CKEditor view DOM (AutoImage renders inline images as <img>)
-      const imgElements = Array.from(domRoot.querySelectorAll("img")) as HTMLImageElement[];
-
-      for (let i = 0; i < imgElements.length; i++) {
-        const img = imgElements[i];
-        let src = img.getAttribute("src") || "";
-
-        // Skip external URLs, only handle data URLs (base64 images)
-        if (!src.startsWith("data:")) continue;
-
-        try {
-          // Convert base64 data URL to File object
-          const [header, data] = src.split(",");
-          const mimeType = header.match(/:(.*?);/)?.[1] || "image/png";
-          const byteString = atob(data);
-          const ab = new ArrayBuffer(byteString.length);
-          const ua = new Uint8Array(ab);
-          for (let j = 0; j < byteString.length; j++) {
-            ua[j] = byteString.charCodeAt(j);
-          }
-
-          const blob = new Blob([ab], { type: mimeType });
-          files.push(new File([blob], `screenshot_${Date.now()}_${i}.png`, { type: mimeType }));
-        } catch (e) {
-          console.error("[getAllImagesAsFiles] failed:", e);
+    const convertDataUrlToFile = (src: string, index: number): boolean => {
+      if (!src.startsWith("data:")) return false;
+      try {
+        const [header, data] = src.split(",");
+        const mimeType = header.match(/:(.*?);/)?.[1] || "image/png";
+        const byteString = atob(data);
+        const ab = new ArrayBuffer(byteString.length);
+        const ua = new Uint8Array(ab);
+        for (let j = 0; j < byteString.length; j++) {
+          ua[j] = byteString.charCodeAt(j);
         }
+        const blob = new Blob([ab], { type: mimeType });
+        files.push(new File([blob], `screenshot_${Date.now()}_${index}.png`, { type: mimeType }));
+        return true;
+      } catch (e) {
+        console.error("[getAllImagesAsFiles] failed to convert data URL:", e);
+        return false;
+      }
+    };
+
+    let totalFound = 0;
+
+    // Strategy 1: Model API — recursive traversal of imageInline nodes
+    try {
+      editorInstance.model.change((writer) => {
+        const root = editorInstance.model.document.getRoot();
+        if (!root) return [];
+
+        const traverse = (node: any): number => {
+          let count = 0;
+          // Check if this node itself is an imageInline
+          if (node.name === "imageInline") {
+            const src = writer.getAttribute(node, "src");
+            if (typeof src === "string" && convertDataUrlToFile(src, ++totalFound)) {
+              count++;
+              console.log("[getAllImagesAsFiles] model: found imageInline #", totalFound);
+            }
+          }
+          // Recurse into children for both block and inline nodes
+          if (node.$is("element") && !node.is("$text")) {
+            for (const child of node.getChildren()) {
+              count += traverse(child);
+            }
+          }
+          return count;
+        };
+
+        let modelTotal = 0;
+        for (const child of root.getChildren()) {
+          modelTotal += traverse(child);
+        }
+        console.log("[getAllImagesAsFiles] model strategy found:", modelTotal, "images");
+        return [];
+      });
+    } catch (e) {
+      console.warn("[getAllImagesAsFiles] model API extraction failed:", e);
+    }
+
+    // Strategy 2: DOM query — look for <img> tags in the editing view
+    try {
+      const domRoot = editorInstance.editing.view.domRoot?.element;
+      if (domRoot) {
+        const imgElements = Array.from(domRoot.querySelectorAll("img")) as HTMLImageElement[];
+        console.log("[getAllImagesAsFiles] DOM: found", imgElements.length, "<img> elements in view");
+        for (let i = 0; i < imgElements.length; i++) {
+          const src = imgElements[i].getAttribute("src") || "";
+          if (!src.startsWith("data:")) continue;
+          // Avoid duplicates — only add if not already found via model
+          const exists = files.some(f => f.name.includes(src.substring(0, 50)));
+          if (!exists && convertDataUrlToFile(src, ++totalFound)) {
+            console.log("[getAllImagesAsFiles] DOM: extracted image #", totalFound);
+          }
+        }
+      } else {
+        console.warn("[getAllImagesAsFiles] no domRoot.element found");
       }
     } catch (e) {
-      console.error("[getAllImagesAsFiles] error:", e);
+      console.warn("[getAllImagesAsFiles] DOM extraction failed:", e);
     }
+
+    // Strategy 3: HTML parse — extract <img src="data:..."> from getData() output
+    if (totalFound === 0) {
+      try {
+        const html = editorInstance.getData();
+        const imgRegex = /<img[^>]+src=["'](data:[^"']+)["'][^>]*>/gi;
+        let match;
+        while ((match = imgRegex.exec(html)) !== null) {
+          const src = match[1];
+          if (convertDataUrlToFile(src, ++totalFound)) {
+            console.log("[getAllImagesAsFiles] HTML parse: extracted image #", totalFound);
+          }
+        }
+        if (totalFound === 0) {
+          console.warn("[getAllImagesAsFiles] no images in getData() either");
+          // Log first 500 chars of HTML for debugging
+          console.log("[getAllImagesAsFiles] getData() preview:", html.substring(0, 500));
+        }
+      } catch (e) {
+        console.warn("[getAllImagesAsFiles] HTML parse failed:", e);
+      }
+    }
+
+    if (totalFound > 0) {
+      console.log("[getAllImagesAsFiles] total images extracted:", totalFound, "→", files.length, "File objects");
+    } else {
+      console.error("[getAllImagesAsFiles] NO IMAGES FOUND by any strategy!");
+      // Dump model structure for debugging
+      try {
+        editorInstance.model.change((writer) => {
+          const root = editorInstance.model.document.getRoot();
+          if (root) {
+            const dump = Array.from(root.getChildren()).map(c => ({ name: c.name, isText: c.is("$text") }));
+            console.log("[getAllImagesAsFiles] model root children:", JSON.stringify(dump.map(d => d.name || "text")));
+          }
+        });
+      } catch {}
+    }
+
     return files;
   };
 
