@@ -63,13 +63,16 @@ const SendActionBar = ({
   getImageMessage,
   getImageMessageByPath,
   getFileMessage,
+  onScreenshotStart,
 }: {
   sendMessage: (params: SendMessageParams) => Promise<void>;
   getImageMessage: (file: File) => Promise<MessageItem>;
   getImageMessageByPath: (filePath: string, fileName: string) => Promise<MessageItem>;
   getFileMessage: (file: File) => Promise<MessageItem>;
+  onScreenshotStart: (hideWindow: boolean) => void;
 }) => {
   const [visibleState, setVisibleState] = useState(false);
+  const [screenshotPopVisible, setScreenshotPopVisible] = useState(false);
   const isGroupSession = useConversationStore(
     (state) => !!state.currentConversation?.groupID,
   );
@@ -86,27 +89,32 @@ const SendActionBar = ({
     sendMessage({ message });
   };
 
-  const screenshotHandle = async () => {
-    if (!window.electronAPI) {
-      console.error("[screenshot] no electronAPI");
-      return;
-    }
-    try {
-      const filePath = await window.electronAPI.ipcInvoke("capture-screen");
-      console.log("[screenshot] filePath:", filePath);
-      if (!filePath) {
-        console.log("[screenshot] filePath is null/empty, returning early");
-        return;
-      }
-
-
-      const message = await getImageMessageByPath(filePath as string, `screenshot_${Date.now()}.png`);
-      console.log("[screenshot] message created:", message?.clientMsgID);
-      sendMessage({ message });
-    } catch (e) {
-      console.error("[screenshot] failed:", e);
-    }
+  const handleScreenshotDirect = () => {
+    setScreenshotPopVisible(false);
+    onScreenshotStart(false);
   };
+
+  const handleScreenshotHideWindow = () => {
+    setScreenshotPopVisible(false);
+    onScreenshotStart(true);
+  };
+
+  const screenshotContent = (
+    <div className="flex flex-col">
+      <div
+        className="cursor-pointer px-3 py-2 text-sm hover:bg-[var(--bg-primary)] rounded"
+        onClick={handleScreenshotDirect}
+      >
+        {t("placeholder.screenshot")}
+      </div>
+      <div
+        className="cursor-pointer px-3 py-2 text-sm hover:bg-[var(--bg-primary)] rounded"
+        onClick={handleScreenshotHideWindow}
+      >
+        {t("placeholder.screenshotHideWindow")}
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex items-center px-4.5 pt-2">
@@ -136,7 +144,9 @@ const SendActionBar = ({
             accept={action.accept}
             imageHandle={imageHandle}
             fileHandle={fileHandle}
-            screenshotHandle={screenshotHandle}
+            screenshotContent={screenshotContent}
+            screenshotPopVisible={screenshotPopVisible}
+            setScreenshotPopVisible={setScreenshotPopVisible}
             actionKey={action.key}
           >
             <div
@@ -161,7 +171,9 @@ const ActionWrap = ({
   children,
   imageHandle,
   fileHandle,
-  screenshotHandle,
+  screenshotContent,
+  screenshotPopVisible,
+  setScreenshotPopVisible,
   actionKey,
 }: {
   accept?: string;
@@ -169,14 +181,26 @@ const ActionWrap = ({
   popProps?: PopoverProps;
   imageHandle: (options: UploadRequestOption) => void;
   fileHandle: (options: UploadRequestOption) => void;
-  screenshotHandle?: () => void;
+  screenshotContent?: ReactNode;
+  screenshotPopVisible?: boolean;
+  setScreenshotPopVisible?: (v: boolean) => void;
   actionKey?: string;
 }) => {
   if (actionKey === "screenshot") {
     return (
-      <div className="mr-5 flex cursor-pointer" onClick={screenshotHandle}>
-        {children}
-      </div>
+      <Popover
+        content={screenshotContent}
+        title={null}
+        arrow={false}
+        trigger="click"
+        open={screenshotPopVisible}
+        onOpenChange={(visible) => setScreenshotPopVisible?.(visible)}
+        placement="top"
+      >
+        <div className="mr-5 flex cursor-pointer">
+          {children}
+        </div>
+      </Popover>
     );
   }
   if (accept) {

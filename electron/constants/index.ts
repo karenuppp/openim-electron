@@ -15,6 +15,9 @@ export const IpcRenderToMain = {
   showInputContextMenu: "showInputContextMenu",
   getDataPath: "getDataPath",
   captureScreen: "capture-screen",
+  captureScreenHide: "capture-screen-hide",
+  readFileAsDataUrl: "read-file-as-data-url",
+  getFileInfo: "get-file-info",
   openFile: "open-file",
   downloadFile: "download-file",
 };

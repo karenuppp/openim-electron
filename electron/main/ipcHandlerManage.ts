@@ -1,4 +1,4 @@
-import { BrowserWindow, Menu, app, dialog, ipcMain, desktopCapturer, shell } from "electron";
+import { BrowserWindow, Menu, app, dialog, ipcMain, desktopCapturer, shell, globalShortcut } from "electron";
 import axios from "axios";
 import {
   clearCache,
@@ -147,21 +147,71 @@ export const setIpcMainListener = () => {
     }
   });
 
-  ipcMain.handle(IpcRenderToMain.openFile, async (_, filePath: string) => {
+  ipcMain.handle(IpcRenderToMain.captureScreenHide, async () => {
+    console.log("[IPC captureScreenHide] called, hiding window then capturing");
+    const win = BrowserWindow.getFocusedWindow();
+    if (win && !win.isDestroyed()) {
+      win.hide();
+      await new Promise((r) => setTimeout(r, 500));
+    }
     try {
-      if (!filePath) return false;
-      await shell.openPath(filePath);
-      return true;
+      return await new Promise<string | null>((resolve, reject) => {
+        if (screenshotsInstance) {
+          screenshotsInstance.endCapture();
+          screenshotsInstance = null;
+        }
+        screenshotsInstance = new Screenshots();
+        screenshotsInstance.on("ok", async (_, buffer: Buffer) => {
+          console.log("[IPC captureScreenHide] ok event fired, buffer length:", buffer.length);
+          try {
+            const saveDir = global.pathConfig.sdkResourcesPath;
+            if (!fs.existsSync(saveDir)) {
+              fs.mkdirSync(saveDir, { recursive: true });
+            }
+            const filePath = path.join(saveDir, `screenshot_${Date.now()}.png`);
+            await fs.promises.writeFile(filePath, buffer);
+            screenshotsInstance?.endCapture();
+            screenshotsInstance = null;
+            if (win && !win.isDestroyed()) {
+              win.show();
+            }
+            console.log("[IPC captureScreenHide] file saved to:", filePath);
+            resolve(filePath);
+          } catch (e) {
+            screenshotsInstance?.endCapture();
+            screenshotsInstance = null;
+            if (win && !win.isDestroyed()) {
+              win.show();
+            }
+            console.error("[IPC captureScreenHide] write error:", e);
+            reject(e);
+          }
+        });
+        screenshotsInstance.on("cancel", () => {
+          screenshotsInstance?.endCapture();
+          screenshotsInstance = null;
+          if (win && !win.isDestroyed()) {
+            win.show();
+          }
+          console.log("[IPC captureScreenHide] cancelled");
+          resolve(null);
+        });
+        screenshotsInstance.startCapture();
+        console.log("[IPC captureScreenHide] startCapture called");
+      });
     } catch (e) {
-      console.error("open-file failed", e);
-      return false;
+      console.error("capture-screen-hide failed:", e);
+      if (win && !win.isDestroyed()) {
+        win.show();
+      }
+      return null;
     }
   });
 
-
-  ipcMain.handle("read-file-as-data-url", async (_, filePath: string) => {
+  ipcMain.handle(IpcRenderToMain.readFileAsDataUrl, async (_, filePath: string) => {
     try {
-      const buffer = await fs.promises.readFile(filePath);
+      const data = await fs.promises.readFile(filePath);
+      const base64 = data.toString("base64");
       const ext = path.extname(filePath).toLowerCase();
       const mimeMap: Record<string, string> = {
         ".png": "image/png",
@@ -172,10 +222,21 @@ export const setIpcMainListener = () => {
         ".bmp": "image/bmp",
       };
       const mime = mimeMap[ext] || "image/png";
-      return `data:${mime};base64,${buffer.toString("base64")}`;
+      return `data:${mime};base64,${base64}`;
     } catch (e) {
-      console.error("read-file-as-data-url failed:", e);
+      console.error("[IPC readFileAsDataUrl] error:", e);
       return null;
+    }
+  });
+
+  ipcMain.handle(IpcRenderToMain.openFile, async (_, filePath: string) => {
+    try {
+      if (!filePath) return false;
+      await shell.openPath(filePath);
+      return true;
+    } catch (e) {
+      console.error("open-file failed", e);
+      return false;
     }
   });
 
