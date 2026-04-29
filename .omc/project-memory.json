@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1776740376254,
+  "lastScanned": 1776846512189,
   "projectRoot": "/Users/hgj/Desktop/hermes_workspace/openim-electron-demo",
   "techStack": {
     "languages": [
@@ -78,10 +78,7 @@
       "public",
       "src"
     ],
-    "gitBranches": {
-      "defaultBranch": "main",
-      "branchingStrategy": null
-    }
+    "gitBranches": null
   },
   "customNotes": [],
   "directoryMap": {
@@ -89,7 +86,7 @@
       "path": "dist",
       "purpose": "Distribution/build output",
       "fileCount": 7,
-      "lastAccessed": 1776740376238,
+      "lastAccessed": 1776846512180,
       "keyFiles": [
         "emojis.json",
         "favicon.ico",
@@ -102,7 +99,7 @@
       "path": "dist-electron",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1776740376247,
+      "lastAccessed": 1776846512182,
       "keyFiles": [
         "electron-env.d.js"
       ]
@@ -111,14 +108,14 @@
       "path": "docs",
       "purpose": "Documentation",
       "fileCount": 0,
-      "lastAccessed": 1776740376247,
+      "lastAccessed": 1776846512182,
       "keyFiles": []
     },
     "e2e": {
       "path": "e2e",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1776740376248,
+      "lastAccessed": 1776846512182,
       "keyFiles": [
         "example.spec.ts"
       ]
@@ -127,7 +124,7 @@
       "path": "electron",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1776740376248,
+      "lastAccessed": 1776846512182,
       "keyFiles": [
         "electron-env.d.ts"
       ]
@@ -136,7 +133,7 @@
       "path": "patches",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1776740376248,
+      "lastAccessed": 1776846512182,
       "keyFiles": [
         "@ckeditor+ckeditor5-ui+43.0.0.patch"
       ]
@@ -145,7 +142,7 @@
       "path": "public",
       "purpose": "Public files",
       "fileCount": 6,
-      "lastAccessed": 1776740376248,
+      "lastAccessed": 1776846512182,
       "keyFiles": [
         "emojis.json",
         "favicon.ico",
@@ -154,11 +151,18 @@
         "sql-wasm.wasm"
       ]
     },
+    "release": {
+      "path": "release",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1776846512183,
+      "keyFiles": []
+    },
     "src": {
       "path": "src",
       "purpose": "Source code",
       "fileCount": 5,
-      "lastAccessed": 1776740376248,
+      "lastAccessed": 1776846512183,
       "keyFiles": [
         "AntdGlobalComp.tsx",
         "App.tsx",
@@ -171,7 +175,7 @@
       "path": "dist/assets",
       "purpose": "Static assets",
       "fileCount": 96,
-      "lastAccessed": 1776740376249,
+      "lastAccessed": 1776846512183,
       "keyFiles": [
         "accessibility-fcaf4e02.svg",
         "align-bottom-bf11cd09.svg",
@@ -182,7 +186,7 @@
       "path": "dist-electron/utils",
       "purpose": "Utility functions",
       "fileCount": 3,
-      "lastAccessed": 1776740376249,
+      "lastAccessed": 1776846512183,
       "keyFiles": [
         "imsdk.js",
         "index.js",
@@ -193,7 +197,7 @@
       "path": "electron/utils",
       "purpose": "Utility functions",
       "fileCount": 3,
-      "lastAccessed": 1776740376249,
+      "lastAccessed": 1776846512183,
       "keyFiles": [
         "imsdk.ts",
         "index.ts",
@@ -204,7 +208,7 @@
       "path": "src/api",
       "purpose": "API routes",
       "fileCount": 4,
-      "lastAccessed": 1776740376250,
+      "lastAccessed": 1776846512184,
       "keyFiles": [
         "errorHandle.ts",
         "imApi.ts",
@@ -215,7 +219,7 @@
       "path": "src/assets",
       "purpose": "Static assets",
       "fileCount": 1,
-      "lastAccessed": 1776740376250,
+      "lastAccessed": 1776846512184,
       "keyFiles": [
         "node.svg"
       ]
@@ -224,14 +228,14 @@
       "path": "src/components",
       "purpose": "UI components",
       "fileCount": 0,
-      "lastAccessed": 1776740376250,
+      "lastAccessed": 1776846512184,
       "keyFiles": []
     },
     "src/config": {
       "path": "src/config",
       "purpose": "Configuration files",
       "fileCount": 1,
-      "lastAccessed": 1776740376250,
+      "lastAccessed": 1776846512184,
       "keyFiles": [
         "index.ts"
       ]
@@ -240,68 +244,170 @@
   "hotPaths": [
     {
       "path": "electron/main/ipcHandlerManage.ts",
-      "accessCount": 6,
-      "lastAccessed": 1776759088326,
+      "accessCount": 24,
+      "lastAccessed": 1776862350796,
+      "type": "file"
+    },
+    {
+      "path": "src",
+      "accessCount": 23,
+      "lastAccessed": 1776861541854,
+      "type": "directory"
+    },
+    {
+      "path": "src/pages/chat/queryChat/ChatHeader/index.tsx",
+      "accessCount": 17,
+      "lastAccessed": 1776853520684,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/chat/queryChat/MessageItem/index.tsx",
+      "accessCount": 15,
+      "lastAccessed": 1776853604596,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/chat/queryChat/index.tsx",
+      "accessCount": 11,
+      "lastAccessed": 1776853544363,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/chat/queryChat/MessageItem/FileMessageRender.tsx",
+      "accessCount": 10,
+      "lastAccessed": 1776829451596,
       "type": "file"
     },
     {
       "path": "src/pages/chat/queryChat/ChatFooter/index.tsx",
-      "accessCount": 4,
-      "lastAccessed": 1776758909596,
+      "accessCount": 9,
+      "lastAccessed": 1776853544414,
       "type": "file"
     },
     {
       "path": "electron",
-      "accessCount": 3,
-      "lastAccessed": 1776758875699,
+      "accessCount": 9,
+      "lastAccessed": 1776861541795,
       "type": "directory"
     },
     {
-      "path": "src/pages/chat/queryChat/MessageItem/FileMessageRender.tsx",
-      "accessCount": 3,
-      "lastAccessed": 1776759021440,
-      "type": "file"
-    },
-    {
-      "path": "electron/constants/index.ts",
-      "accessCount": 2,
-      "lastAccessed": 1776758954217,
+      "path": "src/pages/chat/queryChat/ChatFooter/SendActionBar/index.tsx",
+      "accessCount": 8,
+      "lastAccessed": 1776861859454,
       "type": "file"
     },
     {
       "path": "src/pages/chat/queryChat/ChatFooter/SendActionBar/useFileMessage.ts",
-      "accessCount": 1,
-      "lastAccessed": 1776756969175,
+      "accessCount": 7,
+      "lastAccessed": 1776853520581,
       "type": "file"
     },
     {
-      "path": "src/pages/chat/queryChat/ChatFooter/SendActionBar/index.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1776756969227,
+      "path": "src/pages/chat/queryChat/MessageItem/QuoteMessageRender.tsx",
+      "accessCount": 7,
+      "lastAccessed": 1776862345713,
       "type": "file"
+    },
+    {
+      "path": "src/pages/chat/queryChat/FavoritesPanel.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1776852294876,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/chat/queryChat/MessageItem/MessageContextMenu.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1776852324030,
+      "type": "file"
+    },
+    {
+      "path": "electron/constants/index.ts",
+      "accessCount": 5,
+      "lastAccessed": 1776853596901,
+      "type": "file"
+    },
+    {
+      "path": "electron/preload/index.ts",
+      "accessCount": 5,
+      "lastAccessed": 1776861554132,
+      "type": "file"
+    },
+    {
+      "path": "src/utils/events.ts",
+      "accessCount": 4,
+      "lastAccessed": 1776852152359,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/chat/queryChat/useHistoryMessageList.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1776852673879,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/chat/queryChat/ChatContent.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1776852822068,
+      "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 4,
+      "lastAccessed": 1776853593252,
+      "type": "directory"
+    },
+    {
+      "path": "src/store/chat.ts",
+      "accessCount": 4,
+      "lastAccessed": 1776853604647,
+      "type": "file"
+    },
+    {
+      "path": "vite.config.ts",
+      "accessCount": 3,
+      "lastAccessed": 1776851703570,
+      "type": "file"
+    },
+    {
+      "path": ".env",
+      "accessCount": 2,
+      "lastAccessed": 1776821515123,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/chat/queryChat/MessageItem/MediaMessageRender.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1776827483634,
+      "type": "file"
+    },
+    {
+      "path": "FILE_MESSAGE_README.md",
+      "accessCount": 2,
+      "lastAccessed": 1776846403882,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/chat/queryChat",
+      "accessCount": 2,
+      "lastAccessed": 1776851650290,
+      "type": "directory"
+    },
+    {
+      "path": "src/utils/common.ts",
+      "accessCount": 2,
+      "lastAccessed": 1776852163894,
+      "type": "directory"
+    },
+    {
+      "path": "electron/main",
+      "accessCount": 2,
+      "lastAccessed": 1776861612165,
+      "type": "directory"
     },
     {
       "path": "electron/main/windowManage.ts",
       "accessCount": 1,
       "lastAccessed": 1776757011674,
-      "type": "file"
-    },
-    {
-      "path": "src/pages/chat/queryChat/MessageItem/index.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1776758828839,
-      "type": "file"
-    },
-    {
-      "path": "src/pages/chat/queryChat/MessageItem/MediaMessageRender.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1776758834871,
-      "type": "file"
-    },
-    {
-      "path": "electron/preload/index.ts",
-      "accessCount": 1,
-      "lastAccessed": 1776758880802,
       "type": "file"
     },
     {
@@ -317,10 +423,94 @@
       "type": "file"
     },
     {
-      "path": "src",
+      "path": "src/pages/chat/queryChat/ChatFooter/useSendMessage.ts",
       "accessCount": 1,
-      "lastAccessed": 1776759105517,
+      "lastAccessed": 1776765313449,
+      "type": "file"
+    },
+    {
+      "path": "src/config/index.ts",
+      "accessCount": 1,
+      "lastAccessed": 1776821490590,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/chat/queryChat/MessageItem/MessageSuffix.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1776841862122,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/chat",
+      "accessCount": 1,
+      "lastAccessed": 1776841925269,
       "type": "directory"
+    },
+    {
+      "path": "src/store",
+      "accessCount": 1,
+      "lastAccessed": 1776841955325,
+      "type": "directory"
+    },
+    {
+      "path": "src/store/conversation.ts",
+      "accessCount": 1,
+      "lastAccessed": 1776841959946,
+      "type": "directory"
+    },
+    {
+      "path": "src/pages/chat/queryChat/MessageItem/CatchMsgRenderer.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1776847322067,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/chat/queryChat/MessageItem/TextMessageRender.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1776847443024,
+      "type": "file"
+    },
+    {
+      "path": "src/App.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1776850521596,
+      "type": "directory"
+    },
+    {
+      "path": "src/routes/index.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1776851741525,
+      "type": "file"
+    },
+    {
+      "path": "tsconfig.json",
+      "accessCount": 1,
+      "lastAccessed": 1776851974599,
+      "type": "file"
+    },
+    {
+      "path": "src/store/type.d.ts",
+      "accessCount": 1,
+      "lastAccessed": 1776852176460,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/chat/queryChat/MessageItem",
+      "accessCount": 1,
+      "lastAccessed": 1776852196165,
+      "type": "directory"
+    },
+    {
+      "path": "electron/main/appManage.ts",
+      "accessCount": 1,
+      "lastAccessed": 1776853544312,
+      "type": "file"
+    },
+    {
+      "path": "electron/main/index.ts",
+      "accessCount": 1,
+      "lastAccessed": 1776853620385,
+      "type": "file"
     }
   ],
   "userDirectives": []

@@ -3,8 +3,6 @@ import { Button } from "antd";
 import { t } from "i18next";
 import { forwardRef, ForwardRefRenderFunction, memo, useRef, useState, useEffect } from "react";
 
-import "./ScreenshotPreview.scss";
-
 import { MessageType, MessageItem } from "@openim/wasm-client-sdk";
 import { IMSDK } from "@/layout/MainContentWrap";
 import CKEditor from "@/components/CKEditor";
@@ -28,6 +26,11 @@ i18n.on("languageChanged", () => {
   sendActions[1].label = t("placeholder.sendWithShiftEnter");
 });
 
+interface ScreenshotPreview {
+  dataUrl: string;
+  filePath: string;
+}
+
 const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
   const [html, setHtml] = useState("");
   const latestHtml = useLatest(html);
@@ -38,37 +41,29 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
   const { sendMessage } = useSendMessage();
   const quoteMessage = useChatStore((s) => s.quoteMessage);
   const setQuoteMessage = useChatStore((s) => s.setQuoteMessage);
-  const setQuoteFallback = useChatStore((s) => s.setQuoteFallback);
 
-  // Pending screenshot file paths (for sending via getImageMessageByPath)
-  const [pendingScreenshotPaths, setPendingScreenshotPaths] = useState<string[]>([]);
+  // Screenshot previews stored separately from CKEditor HTML
+  const [screenshotPreviews, setScreenshotPreviews] = useState<ScreenshotPreview[]>([]);
   const [sendingScreenshot, setSendingScreenshot] = useState(false);
 
   useEffect(() => {
     if (prevConversationIDRef.current && currentConversationID && prevConversationIDRef.current !== currentConversationID) {
       setQuoteMessage(null);
-      clearPendingScreenshots();
+      clearScreenshots();
     }
     prevConversationIDRef.current = currentConversationID;
   }, [currentConversationID, setQuoteMessage]);
 
-  const extractScreenshotPathsFromHtml = (htmlContent: string): string[] => {
-    const results: string[] = [];
-    const imgRegex = /<img[^>]+class=["'][^"']*screenshot-preview-img[^"']*["'][^>]+data-src="([^"]+)"/gi;
-    let match;
-    while ((match = imgRegex.exec(htmlContent)) !== null) {
-      results.push(match[1]); // data-src holds the pending screenshot path
-    }
-    return results;
+  const addScreenshotPreview = (dataUrl: string, filePath: string) => {
+    setScreenshotPreviews(prev => [...prev, { dataUrl, filePath }]);
   };
 
-  const clearPendingScreenshots = () => {
-    setPendingScreenshotPaths([]);
-    // Remove all screenshot image tags from HTML content
-    const cleaned = html.replace(/<p>\s*<img[^>]*class=["'][^"']*screenshot-preview-img[^"']*["'][^>]*\/?>\s*<\/p>/gi, "");
-    if (cleaned !== html) {
-      setHtml(cleaned.trim());
-    }
+  const removeScreenshotPreview = (index: number) => {
+    setScreenshotPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const clearScreenshots = () => {
+    setScreenshotPreviews([]);
   };
 
   const onScreenshotStart = async (hideWindow: boolean) => {
@@ -81,19 +76,10 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
       const filePath = await window.electronAPI.ipcInvoke<string | null>(channel);
       if (!filePath) return;
 
-      // Load image as data URL for preview display
+      // Load image as data URL for preview display (kept outside CKEditor)
       const dataUrl = await window.electronAPI.ipcInvoke<string | null>("read-file-as-data-url", filePath);
       if (dataUrl) {
-        setPendingScreenshotPaths(prev => [...prev, filePath]);
-
-        // Insert screenshot inline in CKEditor with data-src holding the file path for sending
-        const imgHtml = `<img class="screenshot-preview-img" src="${dataUrl}" data-src="${filePath}" />`;
-        
-        if (html.trim()) {
-          setHtml(html + "\n\n" + imgHtml);
-        } else {
-          setHtml(imgHtml);
-        }
+        addScreenshotPreview(dataUrl, filePath);
       } else {
         console.error("[screenshot] failed to read file as data URL");
       }
@@ -102,25 +88,19 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
     }
   };
 
-  const sendScreenshotsFromEditor = async () => {
-    if (!html.trim()) return;
-    
-    // Extract all screenshot image paths from the HTML content
-    const screenshotPaths = extractScreenshotPathsFromHtml(html);
-    if (screenshotPaths.length === 0) return false; // no screenshots in editor
+  const sendScreenshots = async () => {
+    if (screenshotPreviews.length === 0) return false;
 
     setSendingScreenshot(true);
     try {
-      for (const filePath of screenshotPaths) {
-        const message = await getImageMessageByPath(filePath, `screenshot_${Date.now()}.png`);
-        console.log("[screenshot] sending:", message?.clientMsgID);
+      for (const preview of screenshotPreviews) {
+        console.log("[screenshot] sending:", preview.filePath);
+        const message = await getImageMessageByPath(preview.filePath, `screenshot_${Date.now()}.png`);
         await sendMessage({ message });
       }
 
-      // Remove all screenshot images from HTML after successful send
-      const cleanedHtml = html.replace(/<img[^>]*class=["'][^"']*screenshot-preview-img[^"']*["'][^>]*\/?>/gi, "").trim();
-      setHtml(cleanedHtml);
-      setPendingScreenshotPaths([]);
+      // Clear all screenshots after successful send
+      setScreenshotPreviews([]);
       
       return true; // sent screenshots
     } catch (e) {
@@ -136,50 +116,20 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
   };
 
   const enterToSend = async () => {
-    // If there are pending screenshots in editor, send them first (with text if any)
-    if (html.includes('screenshot-preview-img') && !sendingScreenshot) {
-      await sendScreenshotsFromEditor();
-      // After sending screenshot, still send text if there is any remaining
-      const cleanText = getCleanText(latestHtml.current ?? '');
-      if (!cleanText) return;
+    // Send screenshots first if any exist
+    if (screenshotPreviews.length > 0 && !sendingScreenshot) {
+      await sendScreenshots();
     }
 
     const cleanText = getCleanText(latestHtml.current ?? '');
+    
+    // If we just sent screenshots and there's no text, don't do anything else
     if (!cleanText) return;
 
     let message: MessageItem;
     if (quoteMessage) {
       const original = quoteMessage as MessageItem;
-      setQuoteFallback({
-        clientMsgID: original.clientMsgID,
-        serverMsgID: original.serverMsgID,
-        createTime: original.createTime,
-        sendTime: original.sendTime,
-        sessionType: original.sessionType,
-        sendID: original.sendID,
-        recvID: original.recvID,
-        msgFrom: original.msgFrom,
-        contentType: original.contentType,
-        senderPlatformID: original.senderPlatformID,
-        senderNickname: original.senderNickname || '',
-        senderFaceUrl: original.senderFaceUrl || '',
-        groupID: original.groupID || '',
-        content: original.content || '',
-        seq: original.seq,
-        isRead: original.isRead,
-        status: original.status,
-        textElem: original.textElem || undefined,
-        pictureElem: original.pictureElem || undefined,
-        soundElem: original.soundElem || undefined,
-        videoElem: original.videoElem || undefined,
-        fileElem: original.fileElem || undefined,
-        mergeElem: original.mergeElem || undefined,
-        atTextElem: original.atTextElem || undefined,
-        faceElem: original.faceElem || undefined,
-        locationElem: original.locationElem || undefined,
-        customElem: original.customElem || undefined,
-      });
-
+      
       const textResult = await IMSDK.createTextMessage(cleanText);
       message = textResult.data as MessageItem;
       (message as any).contentType = MessageType.QuoteMessage;
@@ -228,6 +178,28 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
               </div>
             </div>
             <Button size="small" type="text" onClick={() => setQuoteMessage(null)}>✕</Button>
+          </div>
+        )}
+
+        {/* Screenshot preview row — rendered separately from CKEditor */}
+        {screenshotPreviews.length > 0 && (
+          <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+            <span className="text-xs text-[var(--sub-text)]">{t("placeholder.screenshotPreview")}</span>
+            {screenshotPreviews.map((preview, index) => (
+              <div key={index} className="relative group inline-block rounded-lg overflow-hidden border border-[var(--border-color)]">
+                <img 
+                  src={preview.dataUrl} 
+                  alt="screenshot" 
+                  className="max-w-[120px] max-h-[80px] object-contain" 
+                />
+                <button
+                  onClick={() => removeScreenshotPreview(index)}
+                  className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-[10px]"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
           </div>
         )}
 

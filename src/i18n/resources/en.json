@@ -364,6 +364,7 @@
     "callTime": "Call duration",
     "handleByOtherDevice": "Handled on another device",
     "screenshotHideWindow": "Hide current window screenshot",
+    "screenshotPreview": "Screenshot preview",
     "historyList": "History",
     "memberList": "Group member list",
     "meetingInvitation": "Call invitation",
