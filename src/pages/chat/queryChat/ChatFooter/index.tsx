@@ -33,7 +33,7 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
 
   const currentConversationID = useConversationStore((s) => s.currentConversation?.conversationID);
   const prevConversationIDRef = useRef<string | undefined>(currentConversationID);
-  const { getImageMessage, getFileMessage } = useFileMessage();
+  const { getImageMessage, getImageMessageByPath, getFileMessage } = useFileMessage();
   const { sendMessage } = useSendMessage();
   const quoteMessage = useChatStore((s) => s.quoteMessage);
   const setQuoteMessage = useChatStore((s) => s.setQuoteMessage);
@@ -94,7 +94,7 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
           let count = 0;
           // Check if this node itself is an imageInline
           if (node.name === "imageInline") {
-            const src = writer.getAttribute(node, "src");
+            const src = node.getAttribute("src");
             if (typeof src === "string" && convertDataUrlToFile(src, ++totalFound)) {
               count++;
               console.log("[getAllImagesAsFiles] model: found imageInline #", totalFound);
@@ -222,11 +222,22 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
   const sendAll = async () => {
     // Upload all images from CKEditor DOM (both screenshots and pasted images)
     const imageFiles = await getAllImagesAsFiles();
+    const screenshotFilePaths = screenshotPaths;
 
-    for (const file of imageFiles) {
-      console.log("[send] uploading screenshot:", file.name);
+    // If no images found from CKEditor, try direct file path upload
+    const usePathFallback = imageFiles.length === 0 && screenshotFilePaths.length > 0;
+    if (usePathFallback) {
+      console.log("[send] CKEditor extraction returned 0 images, using screenshotPaths fallback:", screenshotFilePaths);
+    }
+
+    const imageList = usePathFallback ? screenshotFilePaths : imageFiles;
+
+    for (const file of imageList) {
+      console.log("[send] uploading screenshot:", typeof file === "string" ? file : (file as File).name);
       try {
-        const message = await getImageMessage(file as FileWithPath);
+        const message = typeof file === "string"
+          ? await getImageMessageByPath(file, `screenshot_${Date.now()}.png`)
+          : await getImageMessage(file as FileWithPath);
         sendMessage({ message });
       } catch (e) {
         console.error("[send] screenshot upload failed:", e);
@@ -237,7 +248,7 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
 
     const cleanText = getCleanText(latestHtml.current ?? '');
 
-    if (!cleanText && imageFiles.length === 0) {
+    if (!cleanText && imageList.length === 0) {
       // Nothing to send
       return;
     }
