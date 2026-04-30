@@ -201,13 +201,18 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
       const filePath = await window.electronAPI.ipcInvoke<string | null>(channel);
       if (!filePath) return;
 
+      console.log("[screenshot] file saved at:", filePath);
+
       // Load image as data URL and insert into CKEditor at cursor position
       const dataUrl = await window.electronAPI.ipcInvoke<string | null>("read-file-as-data-url", filePath);
+      console.log("[screenshot] dataUrl received, length:", dataUrl?.length);
       if (dataUrl && ckEditorRef.current) {
+        console.log("[screenshot] calling ckEditorRef.current.insertImage...");
         ckEditorRef.current.insertImage(dataUrl);
         addScreenshotPath(filePath);
+        console.log("[screenshot] insertImage call completed");
       } else {
-        console.error("[screenshot] failed to read file as data URL");
+        console.error("[screenshot] failed to read file as data URL, dataUrl:", !!dataUrl, "ckEditorRef:", !!ckEditorRef.current);
       }
     } catch (e) {
       console.error("[screenshot] failed:", e);
