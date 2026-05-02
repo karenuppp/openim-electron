@@ -192,6 +192,9 @@ openim-electron-demo/
 ## Changelog
 
 ### 2025-05-03
+- **Moved file preview to top of input**: Dragged file/images pill list now displays between the quote message bar and CKEditor (instead of below CKEditor), styled consistently with the quote message (`border-b`, `bg-[var(--bg-primary)]`, matching padding).
+- **Added image drag preview in input**: Dragged images now also show in the file preview area (previously only non-image files appeared). Images and files are displayed in separate groups with per-item remove buttons.
+- **Added image/file count feedback toast**: When dragging multiple files/images, shows a toast with the total count (e.g. "3 个文件已添加到待发送列表") to confirm they were queued.
 - **Fixed drag-and-drop file/image handling**:
   - **Files now show in input area**: Dropped non-image files display a pill-shaped file list between CKEditor and the send button, with a remove (x) button per file.
   - **Images properly send**: Previously, dragged images went through File → data: URL → File roundtrip (insert into CKEditor, then extract back). The reconstructed File has no `path` property, so `resolveFilePath` fails on Electron. Now keeps the original File object for sending alongside the CKEditor preview.
