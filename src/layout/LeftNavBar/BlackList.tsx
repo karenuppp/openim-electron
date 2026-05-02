@@ -9,7 +9,7 @@ import { useContactStore } from "@/store/contact";
 import { feedbackToast } from "@/utils/common";
 
 import { OverlayVisibleHandle, useOverlayVisible } from "../../hooks/useOverlayVisible";
-import { IMSDK } from "../MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 
 const BlackList: ForwardRefRenderFunction<OverlayVisibleHandle, unknown> = (_, ref) => {
   const { isOverlayOpen, closeOverlay } = useOverlayVisible(ref);

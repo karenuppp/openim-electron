@@ -34,7 +34,7 @@ i18n
     },
   })
   .then(() => dayjs.locale(i18n.language))
-  .catch(() => console.error("i18n init error"));
+  .catch(() => {});
 
 i18n.on("languageChanged", () => dayjs.locale(i18n.language));
 

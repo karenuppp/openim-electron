@@ -1,21 +1,11 @@
-import { getWithRenderProcess } from "@openim/electron-client-sdk/lib/render";
 import { AllowType } from "@openim/wasm-client-sdk";
 import { useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { useConversationStore, useUserStore } from "@/store";
+import { IMSDK } from "@/utils/imSDK";
 import { emit } from "@/utils/events";
 import { getIMToken, getIMUserID } from "@/utils/storage";
-
-const { instance } = getWithRenderProcess({
-  wasmConfig: {
-    coreWasmPath: "./openIM.wasm",
-    sqlWasmPath: `/sql-wasm.wasm`,
-  },
-});
-const openIMSDK = instance;
-
-export const IMSDK = openIMSDK;
 
 export const MainContentWrap = () => {
   const updateAppSettings = useUserStore((state) => state.updateAppSettings);

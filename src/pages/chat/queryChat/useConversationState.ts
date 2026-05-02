@@ -1,7 +1,7 @@
 import { useLatest, useThrottleFn, useUpdateEffect } from "ahooks";
 import { useEffect } from "react";
 
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import { useConversationStore, useUserStore } from "@/store";
 
 export default function useConversationState() {

@@ -420,6 +420,8 @@ VITE_CHAT_URL=https://chat-api.example.com    # Chat-related REST API base URL (
 
 4. **State Co-location**: Zustand stores hold all mutable state; React Query only caches REST API responses. No Redux or other global state libraries used.
 
+5. **Screenshot → Image Upload Pipeline**: Screenshots are saved to disk then inserted into CKEditor as inline base64 images via model writer. On send, images are extracted from CKEditor model/DOM (3 strategy fallback) and uploaded via `IMSDK.uploadFile` + `createImageMessageByURL`. A `screenshotPaths` fallback state tracks file paths for direct upload when CKEditor extraction fails.
+
 ## Testing
 
 ### End-to-End Tests

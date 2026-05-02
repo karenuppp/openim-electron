@@ -7,7 +7,7 @@ import {
 import { t } from "i18next";
 import { create } from "zustand";
 
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import { feedbackToast } from "@/utils/common";
 import { conversationSort, isGroupSession } from "@/utils/imCommon";
 
@@ -97,7 +97,6 @@ export const useConversationStore = create<ConversationStore>()((set, get) => ({
       set(() => ({ unReadCount: data }));
       return data;
     } catch (error) {
-      console.error(error);
       return 0;
     }
   },

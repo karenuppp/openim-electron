@@ -60,18 +60,12 @@ export function createMainWindow() {
 
   if (process.env.VITE_DEV_SERVER_URL) {
 
-    console.log("[windowManage] loading URL:", url);
     mainWindow.loadURL(url).then(() => {
-      console.log("[windowManage] URL loaded successfully");
     }).catch((err) => {
-      console.error("[windowManage] Failed to load URL:", err);
     });
   } else {
-    console.log("[windowManage] loading file:", global.pathConfig.indexHtml);
     mainWindow.loadFile(global.pathConfig.indexHtml).then(() => {
-      console.log("[windowManage] File loaded successfully");
     }).catch((err) => {
-      console.error("[windowManage] Failed to load file:", err);
     });
   }
 

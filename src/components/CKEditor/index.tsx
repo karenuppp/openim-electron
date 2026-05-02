@@ -93,46 +93,28 @@ const Index: ForwardRefRenderFunction<CKEditorRef, CKEditorProps> = (
       insertImage: (src: string) => {
         const ed = ckEditor.current;
         if (!ed) {
-          console.error("[CKEditor insertImage] editor not ready!");
           return;
         }
-        console.log("[CKEditor insertImage] called with src length:", src?.length, "editor ready:", !!ed);
         if (!src || !src.startsWith("data:")) {
-          console.error("[CKEditor insertImage] invalid src, not a data URL");
           return;
         }
-        console.log("[CKEditor insertImage] src preview:", src.substring(0, 80) + "...");
         try {
-          // Strategy 1: Use model writer to create an imageInline element
           ed.model.change((writer: any) => {
             const imgElement = writer.createElement("imageInline", { src });
             const selection = ed.model.document.selection;
             const position = selection.getFirstPosition();
             if (position) {
-              console.log("[CKEditor insertImage] inserting at position:", position.path);
               writer.insert(imgElement, position);
-              console.log("[CKEditor insertImage] model insert SUCCESS");
-            } else {
-              console.error("[CKEditor insertImage] no valid position found");
             }
           });
         } catch (e1: any) {
-          console.error("[CKEditor insertImage] model change failed:", e1.message);
           try {
-            // Strategy 2: Execute insertImage command
-            console.log("[CKEditor insertImage] trying execute('insertImage')...");
             ed.execute("insertImage", { src });
-            console.log("[CKEditor insertImage] execute insertImage SUCCESS");
           } catch (e2: any) {
-            console.error("[CKEditor insertImage] execute failed:", e2.message);
             try {
-              // Strategy 3: setData with raw HTML
-              console.log("[CKEditor insertImage] trying setData fallback...");
               const currentData = ed.getData();
               ed.setData(currentData + `<img src="${src}" />`);
-              console.log("[CKEditor insertImage] setData SUCCESS");
             } catch (e3: any) {
-              console.error("[CKEditor insertImage] ALL methods failed:", e3.message);
             }
           }
         }

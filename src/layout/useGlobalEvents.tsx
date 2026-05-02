@@ -29,7 +29,7 @@ import { feedbackToast } from "@/utils/common";
 import { initStore } from "@/utils/imCommon";
 import { clearIMProfile, getIMToken, getIMUserID } from "@/utils/storage";
 
-import { IMSDK } from "./MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 
 export function useGlobalEvent() {
   const navigate = useNavigate();

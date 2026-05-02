@@ -29,7 +29,6 @@ export const feedbackToast = (config?: FeedbackToastParams) => {
     onClose,
   });
   if (error) {
-    console.error(msg, error);
   }
 };
 

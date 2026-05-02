@@ -14,7 +14,7 @@ import OIMAvatar from "@/components/OIMAvatar";
 import { useConversationToggle } from "@/hooks/useConversationToggle";
 import useGroupMembers from "@/hooks/useGroupMembers";
 import { OverlayVisibleHandle, useOverlayVisible } from "@/hooks/useOverlayVisible";
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import { feedbackToast } from "@/utils/common";
 
 interface IGroupCardModalProps {

@@ -25,7 +25,7 @@ import group from "@/assets/images/chooseModal/group.png";
 import recently from "@/assets/images/chooseModal/recently.png";
 import { useCurrentMemberRole } from "@/hooks/useCurrentMemberRole";
 import useGroupMembers from "@/hooks/useGroupMembers";
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import { useConversationStore } from "@/store";
 import { useContactStore } from "@/store/contact";
 import { feedbackToast } from "@/utils/common";
@@ -205,7 +205,6 @@ const CommonLeft: FC<ICommonLeftProps> = ({
         item.disabled = data.includes(item.userID!);
       });
     } catch (error) {
-      console.error(error);
     }
     return tmpList;
   };

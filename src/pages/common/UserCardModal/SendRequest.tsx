@@ -5,7 +5,7 @@ import { t } from "i18next";
 import { useState } from "react";
 
 import OIMAvatar from "@/components/OIMAvatar";
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import { feedbackToast } from "@/utils/common";
 
 import { CardInfo } from ".";

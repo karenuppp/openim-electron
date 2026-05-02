@@ -4,7 +4,7 @@ import {
 import { useLatest } from "ahooks";
 import { useCallback, useState } from "react";
 
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import { useConversationStore } from "@/store";
 import { feedbackToast } from "@/utils/common";
 export interface FetchStateType {

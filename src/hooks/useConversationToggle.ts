@@ -3,7 +3,7 @@ import { ConversationItem } from "@openim/wasm-client-sdk/lib/types/entity";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import { useConversationStore } from "@/store";
 import { feedbackToast } from "@/utils/common";
 

@@ -19,7 +19,7 @@ import { CardInfo } from "@/pages/common/UserCardModal";
 import { useContactStore } from "@/store";
 import { feedbackToast } from "@/utils/common";
 
-import { IMSDK } from "../MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 
 interface ISearchUserOrGroupProps {
   isSearchGroup: boolean;

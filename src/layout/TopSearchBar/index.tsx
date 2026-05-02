@@ -25,7 +25,7 @@ import UserCardModal, { CardInfo } from "@/pages/common/UserCardModal";
 import { useContactStore, useUserStore } from "@/store";
 import emitter, { OpenUserCardParams } from "@/utils/events";
 
-import { IMSDK } from "../MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import SearchUserOrGroup from "./SearchUserOrGroup";
 
 type UserCardState = OpenUserCardParams & {

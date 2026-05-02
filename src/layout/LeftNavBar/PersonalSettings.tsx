@@ -10,7 +10,7 @@ import { LocaleString } from "@/store/type";
 import { feedbackToast } from "@/utils/common";
 
 import { OverlayVisibleHandle, useOverlayVisible } from "../../hooks/useOverlayVisible";
-import { IMSDK } from "../MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import BlackList from "./BlackList";
 
 const PersonalSettings: ForwardRefRenderFunction<OverlayVisibleHandle, unknown> = (

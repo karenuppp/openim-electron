@@ -3,7 +3,7 @@ import { useLatest, useRequest } from "ahooks";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import emitter, { emit } from "@/utils/events";
 import { useChatStore } from "@/store/chat";
 

@@ -21,7 +21,7 @@ import {
 import { MessageType, SessionType } from "@openim/wasm-client-sdk";
 import { isThisYear } from "date-fns";
 import { FileWithPath } from "@/pages/chat/queryChat/ChatFooter/SendActionBar/useFileMessage";
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import { UploadFileParams } from "@openim/wasm-client-sdk/lib/types/params";
 dayjs.extend(calendar);
 dayjs.extend(relativeTime);

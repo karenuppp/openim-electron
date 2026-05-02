@@ -2,7 +2,7 @@ import { t } from "i18next";
 import { create } from "zustand";
 
 import { BusinessUserInfo, getBusinessUserInfo } from "@/api/login";
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import router from "@/routes";
 import { feedbackToast } from "@/utils/common";
 import { clearIMProfile, getLocale, setLocale } from "@/utils/storage";

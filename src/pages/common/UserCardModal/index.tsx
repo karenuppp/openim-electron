@@ -28,7 +28,7 @@ import EditableContent from "@/components/EditableContent";
 import OIMAvatar from "@/components/OIMAvatar";
 import { useConversationToggle } from "@/hooks/useConversationToggle";
 import { OverlayVisibleHandle, useOverlayVisible } from "@/hooks/useOverlayVisible";
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import { useContactStore, useUserStore } from "@/store";
 import { feedbackToast } from "@/utils/common";
 
@@ -96,7 +96,6 @@ const UserCardModal: ForwardRefRenderFunction<
       } = await getBusinessUserInfo([userID!]);
       userInfo = { ...userInfo, ...users[0] };
     } catch (error) {
-      console.error("get business user info failed", userID, error);
     }
     return {
       cardInfo: userInfo,

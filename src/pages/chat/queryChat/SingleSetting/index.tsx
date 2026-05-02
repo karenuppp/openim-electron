@@ -7,7 +7,7 @@ import { modal } from "@/AntdGlobalComp";
 import OIMAvatar from "@/components/OIMAvatar";
 import SettingRow from "@/components/SettingRow";
 import { OverlayVisibleHandle, useOverlayVisible } from "@/hooks/useOverlayVisible";
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import { useContactStore } from "@/store/contact";
 import { feedbackToast } from "@/utils/common";
 import { emit } from "@/utils/events";

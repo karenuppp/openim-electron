@@ -3,7 +3,7 @@ import { Dropdown } from "antd";
 import type { MenuProps } from "antd";
 import { FC } from "react";
 
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import { feedbackToast } from "@/utils/common";
 import { useConversationStore, useUserStore } from "@/store";
 import { useChatStore } from "@/store/chat";
@@ -33,7 +33,6 @@ const MessageContextMenu: FC<MessageContextMenuProps> = ({
       emit("MSG_REVOKED", message.clientMsgID);
       feedbackToast({ msg: "已撤回" });
     } catch (e) {
-      console.error("revoke failed", e);
       feedbackToast({ msg: "撤回失败" });
     }
   };

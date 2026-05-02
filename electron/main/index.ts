@@ -11,8 +11,6 @@ import { initI18n } from "../i18n";
 
 export const logger = getLogger(join(app.getPath("userData"), `/OpenIMData/logs`));
 
-console.log("[main] Electron app starting, version:", app.getVersion());
-console.log("[main] userData path:", app.getPath("userData"));
 
 const init = () => {
   initI18n();

@@ -70,25 +70,19 @@ const FileMessageRender: FC<IMessageItemProps> = ({ message }) => {
   const handleOpenFile = async () => {
 
     if (remoteUrl) {
-      console.log("[FileMessageRender] remoteUrl:", remoteUrl);
-      console.log("[FileMessageRender] electronAPI:", !!window.electronAPI);
       try {
         if (window.electronAPI) {
 
           feedbackToast({ msg: "正在下载文件..." });
-          console.log("[FileMessageRender] calling download-file IPC...");
           const savedPath = await window.electronAPI.ipcInvoke("download-file", {
             url: remoteUrl,
             fileName: fileName,
           });
-          console.log("[FileMessageRender] download-file returned:", savedPath);
           if (savedPath) return;
         }
 
-        console.log("[FileMessageRender] falling back to window.open");
         window.open(remoteUrl, "_blank");
       } catch (e) {
-        console.error("[FileMessageRender] download-file failed:", e);
         feedbackToast({ msg: "文件下载失败" });
       }
       return;
@@ -99,7 +93,6 @@ const FileMessageRender: FC<IMessageItemProps> = ({ message }) => {
         await window.electronAPI.ipcInvoke("open-file", localPath);
         return;
       } catch (e) {
-        console.error("open-file failed", e);
       }
     }
 

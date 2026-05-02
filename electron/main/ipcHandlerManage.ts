@@ -1,5 +1,6 @@
 import { BrowserWindow, Menu, app, dialog, ipcMain, desktopCapturer, shell, globalShortcut } from "electron";
-import axios from "axios";
+import * as https from "https";
+import * as http from "http";
 import {
   clearCache,
   closeWindow,
@@ -33,6 +34,18 @@ function getUniqueSavePath(originalPath: string): string {
 }
 
 let screenshotsInstance: Screenshots | null = null;
+
+function downloadFile(url: string): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const protocol = url.startsWith("https") ? https : http;
+    protocol.get(url, (response) => {
+      const chunks: Buffer[] = [];
+      response.on("data", (chunk: Buffer) => chunks.push(chunk));
+      response.on("end", () => resolve(Buffer.concat(chunks)));
+      response.on("error", reject);
+    }).on("error", reject);
+  });
+}
 
 export const setIpcMainListener = () => {
   ipcMain.handle(IpcRenderToMain.clearSession, () => {
@@ -104,7 +117,6 @@ export const setIpcMainListener = () => {
     });
   });
   ipcMain.handle(IpcRenderToMain.captureScreen, async () => {
-    console.log("[IPC captureScreen] called, creating Screenshots instance");
     try {
       return await new Promise<string | null>((resolve, reject) => {
         if (screenshotsInstance) {
@@ -113,7 +125,6 @@ export const setIpcMainListener = () => {
         }
         screenshotsInstance = new Screenshots();
         screenshotsInstance.on("ok", async (_, buffer: Buffer) => {
-          console.log("[IPC captureScreen] ok event fired, buffer length:", buffer.length);
           try {
             const saveDir = global.pathConfig.sdkResourcesPath;
             if (!fs.existsSync(saveDir)) {
@@ -123,12 +134,11 @@ export const setIpcMainListener = () => {
             await fs.promises.writeFile(filePath, buffer);
             screenshotsInstance?.endCapture();
             screenshotsInstance = null;
-            console.log("[IPC captureScreen] file saved to:", filePath);
             resolve(filePath);
           } catch (e) {
             screenshotsInstance?.endCapture();
             screenshotsInstance = null;
-            console.error("[IPC captureScreen] write error:", e);
+  
             reject(e);
           }
         });
@@ -139,16 +149,13 @@ export const setIpcMainListener = () => {
           resolve(null);
         });
         screenshotsInstance.startCapture();
-        console.log("[IPC captureScreen] startCapture called");
       });
     } catch (e) {
-      console.error("capture-screen failed:", e);
       return null;
     }
   });
 
   ipcMain.handle(IpcRenderToMain.captureScreenHide, async () => {
-    console.log("[IPC captureScreenHide] called, hiding window then capturing");
     const win = BrowserWindow.getFocusedWindow();
     if (win && !win.isDestroyed()) {
       win.hide();
@@ -162,7 +169,6 @@ export const setIpcMainListener = () => {
         }
         screenshotsInstance = new Screenshots();
         screenshotsInstance.on("ok", async (_, buffer: Buffer) => {
-          console.log("[IPC captureScreenHide] ok event fired, buffer length:", buffer.length);
           try {
             const saveDir = global.pathConfig.sdkResourcesPath;
             if (!fs.existsSync(saveDir)) {
@@ -175,7 +181,6 @@ export const setIpcMainListener = () => {
             if (win && !win.isDestroyed()) {
               win.show();
             }
-            console.log("[IPC captureScreenHide] file saved to:", filePath);
             resolve(filePath);
           } catch (e) {
             screenshotsInstance?.endCapture();
@@ -183,7 +188,7 @@ export const setIpcMainListener = () => {
             if (win && !win.isDestroyed()) {
               win.show();
             }
-            console.error("[IPC captureScreenHide] write error:", e);
+  
             reject(e);
           }
         });
@@ -193,14 +198,11 @@ export const setIpcMainListener = () => {
           if (win && !win.isDestroyed()) {
             win.show();
           }
-          console.log("[IPC captureScreenHide] cancelled");
           resolve(null);
         });
         screenshotsInstance.startCapture();
-        console.log("[IPC captureScreenHide] startCapture called");
       });
     } catch (e) {
-      console.error("capture-screen-hide failed:", e);
       if (win && !win.isDestroyed()) {
         win.show();
       }
@@ -224,7 +226,6 @@ export const setIpcMainListener = () => {
       const mime = mimeMap[ext] || "image/png";
       return `data:${mime};base64,${base64}`;
     } catch (e) {
-      console.error("[IPC readFileAsDataUrl] error:", e);
       return null;
     }
   });
@@ -235,7 +236,6 @@ export const setIpcMainListener = () => {
       await shell.openPath(filePath);
       return true;
     } catch (e) {
-      console.error("open-file failed", e);
       return false;
     }
   });
@@ -261,7 +261,6 @@ export const setIpcMainListener = () => {
         mimeType: mimeMap[ext] || "application/octet-stream",
       };
     } catch (e) {
-      console.error("get-file-info failed:", e);
       return null;
     }
   });
@@ -273,13 +272,11 @@ export const setIpcMainListener = () => {
         fs.mkdirSync(saveDir, { recursive: true });
       }
       const uniquePath = getUniqueSavePath(path.join(saveDir, fileName));
-      const response = await axios.get(url, { responseType: "arraybuffer" });
-      const buffer = Buffer.from(response.data as ArrayBuffer);
+      const buffer = await downloadFile(url);
       await fs.promises.writeFile(uniquePath, buffer);
       await shell.openPath(uniquePath);
       return uniquePath;
     } catch (e) {
-      console.error("download-file failed", e);
       return null;
     }
   });

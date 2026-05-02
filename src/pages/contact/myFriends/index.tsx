@@ -33,7 +33,6 @@ export const MyFriends = () => {
   const scrollToLetter = useCallback(
     (idx: number) => {
       const prevNum = sectionData?.groupCounts.slice(0, idx).reduce((a, b) => a + b, 0);
-      console.log(prevNum);
 
       virtuoso.current?.scrollToIndex({
         index: prevNum ?? 0,

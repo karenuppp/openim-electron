@@ -22,7 +22,7 @@ import rtc_hungup from "@/assets/images/rtc/rtc_hungup.png";
 import rtc_mic from "@/assets/images/rtc/rtc_mic.png";
 import rtc_mic_off from "@/assets/images/rtc/rtc_mic_off.png";
 import { CustomType } from "@/constants";
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import { useUserStore } from "@/store";
 import { feedbackToast } from "@/utils/common";
 

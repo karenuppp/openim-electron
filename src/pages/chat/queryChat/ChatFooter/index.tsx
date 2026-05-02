@@ -4,7 +4,7 @@ import { t } from "i18next";
 import { forwardRef, ForwardRefRenderFunction, memo, useRef, useState, useEffect } from "react";
 
 import { MessageType, MessageItem } from "@openim/wasm-client-sdk";
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import CKEditor, { CKEditorRef } from "@/components/CKEditor";
 import { getCleanText } from "@/components/CKEditor/utils";
 import i18n from "@/i18n";
@@ -38,7 +38,6 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
   const quoteMessage = useChatStore((s) => s.quoteMessage);
   const setQuoteMessage = useChatStore((s) => s.setQuoteMessage);
 
-  // Track screenshot file paths for upload
   const [screenshotPaths, setScreenshotPaths] = useState<string[]>([]);
 
   const ckEditorRef = useRef<CKEditorRef>(null);
@@ -51,11 +50,6 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
     prevConversationIDRef.current = currentConversationID;
   }, [currentConversationID, setQuoteMessage]);
 
-  // Extract all embedded images from CKEditor as File objects for upload.
-  // Tries multiple strategies for maximum reliability:
-  // 1. Model API (iterates imageInline nodes in the document tree)
-  // 2. DOM query (querySelectorAll on editing view root)
-  // 3. HTML parse (parse getData() output for <img> tags)
   const getAllImagesAsFiles = async (): Promise<File[]> => {
     const editorInstance = ckEditorRef.current?.editor;
     if (!editorInstance) return [];
@@ -77,14 +71,12 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
         files.push(new File([blob], `screenshot_${Date.now()}_${index}.png`, { type: mimeType }));
         return true;
       } catch (e) {
-        console.error("[getAllImagesAsFiles] failed to convert data URL:", e);
         return false;
       }
     };
 
     let totalFound = 0;
 
-    // Strategy 1: Model API — recursive traversal of imageInline nodes
     try {
       editorInstance.model.change((writer) => {
         const root = editorInstance.model.document.getRoot();
@@ -92,15 +84,12 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
 
         const traverse = (node: any): number => {
           let count = 0;
-          // Check if this node itself is an imageInline
           if (node.name === "imageInline") {
             const src = node.getAttribute("src");
             if (typeof src === "string" && convertDataUrlToFile(src, ++totalFound)) {
               count++;
-              console.log("[getAllImagesAsFiles] model: found imageInline #", totalFound);
             }
           }
-          // Recurse into children for both block and inline nodes
           if (node.$is("element") && !node.is("$text")) {
             for (const child of node.getChildren()) {
               count += traverse(child);
@@ -113,36 +102,27 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
         for (const child of root.getChildren()) {
           modelTotal += traverse(child);
         }
-        console.log("[getAllImagesAsFiles] model strategy found:", modelTotal, "images");
         return [];
       });
     } catch (e) {
-      console.warn("[getAllImagesAsFiles] model API extraction failed:", e);
     }
 
-    // Strategy 2: DOM query — look for <img> tags in the editing view
     try {
       const domRoot = editorInstance.editing.view.domRoot?.element;
       if (domRoot) {
         const imgElements = Array.from(domRoot.querySelectorAll("img")) as HTMLImageElement[];
-        console.log("[getAllImagesAsFiles] DOM: found", imgElements.length, "<img> elements in view");
         for (let i = 0; i < imgElements.length; i++) {
           const src = imgElements[i].getAttribute("src") || "";
           if (!src.startsWith("data:")) continue;
-          // Avoid duplicates — only add if not already found via model
           const exists = files.some(f => f.name.includes(src.substring(0, 50)));
           if (!exists && convertDataUrlToFile(src, ++totalFound)) {
-            console.log("[getAllImagesAsFiles] DOM: extracted image #", totalFound);
           }
         }
       } else {
-        console.warn("[getAllImagesAsFiles] no domRoot.element found");
       }
     } catch (e) {
-      console.warn("[getAllImagesAsFiles] DOM extraction failed:", e);
-    }
+          }
 
-    // Strategy 3: HTML parse — extract <img src="data:..."> from getData() output
     if (totalFound === 0) {
       try {
         const html = editorInstance.getData();
@@ -151,30 +131,21 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
         while ((match = imgRegex.exec(html)) !== null) {
           const src = match[1];
           if (convertDataUrlToFile(src, ++totalFound)) {
-            console.log("[getAllImagesAsFiles] HTML parse: extracted image #", totalFound);
           }
         }
         if (totalFound === 0) {
-          console.warn("[getAllImagesAsFiles] no images in getData() either");
-          // Log first 500 chars of HTML for debugging
-          console.log("[getAllImagesAsFiles] getData() preview:", html.substring(0, 500));
         }
       } catch (e) {
-        console.warn("[getAllImagesAsFiles] HTML parse failed:", e);
       }
     }
 
     if (totalFound > 0) {
-      console.log("[getAllImagesAsFiles] total images extracted:", totalFound, "→", files.length, "File objects");
     } else {
-      console.error("[getAllImagesAsFiles] NO IMAGES FOUND by any strategy!");
-      // Dump model structure for debugging
       try {
         editorInstance.model.change((writer) => {
           const root = editorInstance.model.document.getRoot();
           if (root) {
             const dump = Array.from(root.getChildren()).map(c => ({ name: c.name, isText: c.is("$text") }));
-            console.log("[getAllImagesAsFiles] model root children:", JSON.stringify(dump.map(d => d.name || "text")));
           }
         });
       } catch {}
@@ -193,7 +164,6 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
 
   const onScreenshotStart = async (hideWindow: boolean) => {
     if (!window.electronAPI) {
-      console.error("[screenshot] no electronAPI");
       return;
     }
     try {
@@ -201,46 +171,34 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
       const filePath = await window.electronAPI.ipcInvoke<string | null>(channel);
       if (!filePath) return;
 
-      console.log("[screenshot] file saved at:", filePath);
 
-      // Load image as data URL and insert into CKEditor at cursor position
       const dataUrl = await window.electronAPI.ipcInvoke<string | null>("read-file-as-data-url", filePath);
-      console.log("[screenshot] dataUrl received, length:", dataUrl?.length);
       if (dataUrl && ckEditorRef.current) {
-        console.log("[screenshot] calling ckEditorRef.current.insertImage...");
         ckEditorRef.current.insertImage(dataUrl);
         addScreenshotPath(filePath);
-        console.log("[screenshot] insertImage call completed");
       } else {
-        console.error("[screenshot] failed to read file as data URL, dataUrl:", !!dataUrl, "ckEditorRef:", !!ckEditorRef.current);
       }
     } catch (e) {
-      console.error("[screenshot] failed:", e);
     }
   };
 
   const sendAll = async () => {
-    // Upload all images from CKEditor DOM (both screenshots and pasted images)
     const imageFiles = await getAllImagesAsFiles();
     const screenshotFilePaths = screenshotPaths;
 
-    // If no images found from CKEditor, try direct file path upload
     const usePathFallback = imageFiles.length === 0 && screenshotFilePaths.length > 0;
     if (usePathFallback) {
-      console.log("[send] CKEditor extraction returned 0 images, using screenshotPaths fallback:", screenshotFilePaths);
     }
 
     const imageList = usePathFallback ? screenshotFilePaths : imageFiles;
 
     for (const file of imageList) {
-      console.log("[send] uploading screenshot:", typeof file === "string" ? file : (file as File).name);
       try {
         const message = typeof file === "string"
           ? await getImageMessageByPath(file, `screenshot_${Date.now()}.png`)
           : await getImageMessage(file as FileWithPath);
         sendMessage({ message });
       } catch (e) {
-        console.error("[send] screenshot upload failed:", e);
         feedbackToast(t("placeholder.sendFailed") || "发送失败");
         return;
       }
@@ -249,7 +207,6 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
     const cleanText = getCleanText(latestHtml.current ?? '');
 
     if (!cleanText && imageList.length === 0) {
-      // Nothing to send
       return;
     }
 
@@ -279,12 +236,10 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
   };
 
   const onChange = (value: string) => {
-    // Sync screenshotPaths count with number of <img> tags in HTML
     const imgCount = (value.match(/<img[\s\S]*?>/gi) || []).length;
     setScreenshotPaths(prev => {
       if (prev.length === imgCount) return prev;
       if (imgCount < prev.length) return prev.slice(0, imgCount);
-      // New images beyond tracked count — ignore (pasted URLs via AutoImage)
       return prev;
     });
     setHtml(value);
@@ -326,7 +281,7 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
         )}
 
         <div className="relative flex flex-1 flex-col overflow-hidden">
-          <CKEditor ref={ckEditorRef} value={html} onEnter={enterToSend} onChange={onChange} placeholder={t("placeholder.chatInput") || "输入消息..."} />
+          <CKEditor ref={ckEditorRef} value={html} onEnter={enterToSend} onChange={onChange} />
           <div className="flex items-center justify-end py-2 pr-3">
             <Button className="w-fit px-6 py-1" type="primary" onClick={enterToSend}>
               {t("placeholder.send")}

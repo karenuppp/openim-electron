@@ -9,7 +9,7 @@ import { memo, useCallback, useState } from "react";
 
 import arrow from "@/assets/images/contact/arrowTopRight.png";
 import OIMAvatar from "@/components/OIMAvatar";
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import { emit } from "@/utils/events";
 
 type ApplicationItemSource = FriendApplicationItem & GroupApplicationItem;

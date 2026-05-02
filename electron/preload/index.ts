@@ -74,7 +74,6 @@ const getFileByPath = async (filePath: string) => {
     const data = await fs.promises.readFile(filePath);
     return new File([data], filename);
   } catch (error) {
-    console.log(error);
     return null;
   }
 };

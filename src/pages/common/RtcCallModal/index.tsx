@@ -14,7 +14,7 @@ import {
 import DraggableModalWrap from "@/components/DraggableModalWrap";
 import { CustomType } from "@/constants";
 import { OverlayVisibleHandle, useOverlayVisible } from "@/hooks/useOverlayVisible";
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import { useUserStore } from "@/store";
 import { feedbackToast } from "@/utils/common";
 

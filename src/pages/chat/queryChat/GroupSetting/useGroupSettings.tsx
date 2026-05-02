@@ -3,7 +3,7 @@ import { t } from "i18next";
 import { useCallback, useRef } from "react";
 
 import { modal } from "@/AntdGlobalComp";
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import { useConversationStore } from "@/store";
 import { feedbackToast } from "@/utils/common";
 

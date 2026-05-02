@@ -31,8 +31,6 @@ export const initI18n = () => {
       fallbackLng: "en-US",
     },
     (err) => {
-      if (err) return console.error("Error loading i18n resources:", err);
-      console.log("i18n resources loaded successfully");
     },
   );
 };

@@ -32,7 +32,6 @@ const GlobalErrorElement = () => {
     }
   })();
 
-  console.error("GlobalErrorElement caught:", error);
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center">

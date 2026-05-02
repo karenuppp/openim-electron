@@ -9,7 +9,7 @@ import {
 import { t } from "i18next";
 import { create } from "zustand";
 
-import { IMSDK } from "@/layout/MainContentWrap";
+import { IMSDK } from "@/utils/imSDK";
 import { feedbackToast } from "@/utils/common";
 
 import { ContactStore } from "./type";

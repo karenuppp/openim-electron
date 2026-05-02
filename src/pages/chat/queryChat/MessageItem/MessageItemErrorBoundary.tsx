@@ -23,9 +23,6 @@ class MessageItemErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("MessageItemErrorBoundary:::");
-    console.error(this.state.message);
-    console.error(error);
 
     this.setState({ hasError: true });
   }
