@@ -192,7 +192,11 @@ openim-electron-demo/
 ## Changelog
 
 ### 2025-05-03
-- **Fixed drag-and-drop files sending immediately**: Dragging files/images into the chat input now queues them instead of sending instantly. Images are inserted into CKEditor (same as screenshot behavior), other files are stored in a draggable file list. All items send only when the send button is clicked.
+- **Fixed drag-and-drop file/image handling**:
+  - **Files now show in input area**: Dropped non-image files display a pill-shaped file list between CKEditor and the send button, with a remove (x) button per file.
+  - **Images properly insert into CKEditor**: Fixed `FileReader` async timing — images now fully load into CKEditor before `sendAll` is called.
+  - **Fixed image not sending when text is present**: Rewrote `sendAll` with clean branching logic — files, images, and text all send in order regardless of which combination is present.
+  - **Fixed drag-and-drop files sending immediately**: Dragging files/images into the chat input now queues them instead of sending instantly. Images are inserted into CKEditor (same as screenshot behavior), other files show in a file list. All items send only when the send button is clicked.
 - **Fixed empty message bubble on screenshot-only send**: When taking a screenshot and sending without typing any text, the app was sending an extra empty text message bubble after the image. Now correctly skips the text message when there are images but no text content.
 
 ### 2025-05-02
