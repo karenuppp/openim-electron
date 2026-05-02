@@ -351,16 +351,29 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
           </div>
         )}
 
-        <div className="relative flex flex-1 flex-col overflow-hidden">
-          <CKEditor ref={ckEditorRef} value={html} onEnter={enterToSend} onChange={onChange} />
-          {draggedFiles.length > 0 && (
-            <div className="flex flex-wrap gap-2 px-3 py-2 border-t border-[var(--border-color)] max-h-20 overflow-y-auto">
+        {(draggedFiles.length > 0 || draggedImages.length > 0) && (
+          <div className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+            <div className="flex flex-wrap gap-2 px-3 py-1.5">
+              {draggedImages.map((file, idx) => (
+                <div
+                  key={`img-${idx}`}
+                  className="flex items-center gap-1 px-2 py-1 bg-white rounded text-xs"
+                >
+                  <span className="max-w-[150px] truncate">{file.name}</span>
+                  <span
+                    className="cursor-pointer text-[var(--sub-text)] hover:text-red-500 ml-1"
+                    onClick={() => setDraggedImages(prev => prev.filter((_, i) => i !== idx))}
+                  >
+                    ✕
+                  </span>
+                </div>
+              ))}
               {draggedFiles.map((file, idx) => (
                 <div
-                  key={idx}
-                  className="flex items-center gap-1 px-2 py-1 bg-[var(--bg-primary)] rounded text-xs"
+                  key={`file-${idx}`}
+                  className="flex items-center gap-1 px-2 py-1 bg-white rounded text-xs"
                 >
-                  <span className="max-w-[120px] truncate">{file.name}</span>
+                  <span className="max-w-[150px] truncate">{file.name}</span>
                   <span
                     className="cursor-pointer text-[var(--sub-text)] hover:text-red-500 ml-1"
                     onClick={() => setDraggedFiles(prev => prev.filter((_, i) => i !== idx))}
@@ -370,7 +383,11 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
                 </div>
               ))}
             </div>
-          )}
+          </div>
+        )}
+
+        <div className="relative flex flex-1 flex-col overflow-hidden">
+          <CKEditor ref={ckEditorRef} value={html} onEnter={enterToSend} onChange={onChange} />
           <div className="flex items-center justify-end py-2 pr-3">
             <Button className="w-fit px-6 py-1" type="primary" onClick={enterToSend}>
               {t("placeholder.send")}
