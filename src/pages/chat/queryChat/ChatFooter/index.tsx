@@ -185,10 +185,10 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
   };
 
   const sendAll = async () => {
-    const currentDraggedFiles = draggedFiles;
+    const currentDraggedFiles = [...draggedFiles];
     setDraggedFiles([]);
 
-    // Send dragged files first (before processing text/image)
+    // 1. Send any pending dragged files
     for (const file of currentDraggedFiles) {
       try {
         const message = file.type.startsWith("image/")
@@ -201,15 +201,13 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
       }
     }
 
+    // 2. Extract images from CKEditor (screenshots + dragged images that were inserted)
     const imageFiles = await getAllImagesAsFiles();
     const screenshotFilePaths = screenshotPaths;
-
     const usePathFallback = imageFiles.length === 0 && screenshotFilePaths.length > 0;
-    if (usePathFallback) {
-    }
-
     const imageList = usePathFallback ? screenshotFilePaths : imageFiles;
 
+    // 3. Send images
     for (const file of imageList) {
       try {
         const message = typeof file === "string"
@@ -224,45 +222,33 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
 
     const cleanText = getCleanText(latestHtml.current ?? '');
 
-    if (!cleanText && imageList.length > 0) {
-      clearAll();
-      setHtml("");
-      setQuoteMessage(null);
-      return;
+    // 4. Determine if there's anything to send
+    const hasContent = currentDraggedFiles.length > 0 || imageList.length > 0 || !!cleanText;
+    if (!hasContent) return;
+
+    // 5. If there's text, send it as a text/quote message
+    if (cleanText) {
+      let message: MessageItem;
+      if (quoteMessage) {
+        const original = quoteMessage as MessageItem;
+        const textResult = await IMSDK.createTextMessage(cleanText);
+        message = textResult.data as MessageItem;
+        (message as any).contentType = MessageType.QuoteMessage;
+        const quoteMsg = { ...original } as MessageItem;
+        (message as any).quoteElem = {
+          text: cleanText,
+          quoteMessage: quoteMsg,
+        };
+      } else {
+        message = (await IMSDK.createTextMessage(cleanText)).data;
+      }
+      sendMessage({ message });
     }
 
-    if (!cleanText && imageList.length === 0 && currentDraggedFiles.length === 0) {
-      return;
-    }
-
-    // Only dragged files (already sent above), no text or images
-    if (!cleanText && imageList.length === 0 && currentDraggedFiles.length > 0) {
-      clearAll();
-      setHtml("");
-      setQuoteMessage(null);
-      return;
-    }
-
-    let message: MessageItem;
-    if (quoteMessage) {
-      const original = quoteMessage as MessageItem;
-      const textResult = await IMSDK.createTextMessage(cleanText);
-      message = textResult.data as MessageItem;
-      (message as any).contentType = MessageType.QuoteMessage;
-      const quoteMsg = { ...original } as MessageItem;
-      (message as any).quoteElem = {
-        text: cleanText,
-        quoteMessage: quoteMsg,
-      };
-    } else {
-      message = (await IMSDK.createTextMessage(cleanText)).data;
-    }
-
+    // 6. Clean up
     clearAll();
     setHtml("");
     setQuoteMessage(null);
-
-    sendMessage({ message });
   };
 
   const enterToSend = async () => {
@@ -296,20 +282,30 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
       }
     }
 
-    for (const file of imageFiles) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const dataUrl = ev.target?.result as string;
-        if (dataUrl && ckEditorRef.current) {
-          ckEditorRef.current.insertImage(dataUrl);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
+    // Wait for all image FileReader operations to complete before proceeding
+    const insertPromises = imageFiles.map((file) => {
+      return new Promise<void>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const dataUrl = ev.target?.result as string;
+          if (dataUrl && ckEditorRef.current) {
+            ckEditorRef.current.insertImage(dataUrl);
+          }
+          resolve();
+        };
+        reader.onerror = () => resolve();
+        reader.readAsDataURL(file);
+      });
+    });
+
+    await Promise.all(insertPromises);
 
     if (otherFiles.length > 0) {
       setDraggedFiles(prev => [...prev, ...otherFiles]);
-      feedbackToast(`${otherFiles.length} 个文件已添加到待发送列表`);
+      // Show file names in a visible way — CKEditor's onChange will fire for images
+      // We'll store all dragged items (including images that went to CKEditor)
+      // so the user can see what's pending
+      feedbackToast(`${imageFiles.length + otherFiles.length} 个文件已添加到待发送列表`);
     }
   };
 
@@ -336,6 +332,24 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
 
         <div className="relative flex flex-1 flex-col overflow-hidden">
           <CKEditor ref={ckEditorRef} value={html} onEnter={enterToSend} onChange={onChange} />
+          {draggedFiles.length > 0 && (
+            <div className="flex flex-wrap gap-2 px-3 py-2 border-t border-[var(--border-color)] max-h-20 overflow-y-auto">
+              {draggedFiles.map((file, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-1 px-2 py-1 bg-[var(--bg-primary)] rounded text-xs"
+                >
+                  <span className="max-w-[120px] truncate">{file.name}</span>
+                  <span
+                    className="cursor-pointer text-[var(--sub-text)] hover:text-red-500 ml-1"
+                    onClick={() => setDraggedFiles(prev => prev.filter((_, i) => i !== idx))}
+                  >
+                    ✕
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="flex items-center justify-end py-2 pr-3">
             <Button className="w-fit px-6 py-1" type="primary" onClick={enterToSend}>
               {t("placeholder.send")}
