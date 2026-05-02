@@ -191,6 +191,9 @@ openim-electron-demo/
 
 ## Changelog
 
+### 2025-05-03
+- **Fixed empty message bubble on screenshot-only send**: When taking a screenshot and sending without typing any text, the app was sending an extra empty text message bubble after the image. Now correctly skips the text message when there are images but no text content.
+
 ### 2025-05-02
 - **Fixed Windows packaging crash**: Replaced `axios` with Node.js built-in `https`/`http` in main process (`electron/main/ipcHandlerManage.ts`). The `downloadFile` IPC handler previously used `axios.get()`, which caused `Cannot find module 'axios'` errors in packaged Windows builds. Now uses native `https.get()` / `http.get()` instead — zero external dependencies needed at runtime.
 
