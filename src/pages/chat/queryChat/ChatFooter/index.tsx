@@ -40,10 +40,16 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
 
   const [screenshotPaths, setScreenshotPaths] = useState<string[]>([]);
   const [draggedFiles, setDraggedFiles] = useState<FileWithPath[]>([]);
+  const draggedFilesRef = useRef<FileWithPath[]>([]);
+
+  // Sync ref with state for reliable closure access in sendAll
+  useEffect(() => { draggedFilesRef.current = draggedFiles; }, [draggedFiles]);
 
   // Store reference to raw File objects for images that were also inserted into CKEditor
   // This avoids the need to extract data: URLs back to Files (which lose file.path)
   const [draggedImages, setDraggedImages] = useState<FileWithPath[]>([]);
+  const draggedImagesRef = useRef<FileWithPath[]>([]);
+  useEffect(() => { draggedImagesRef.current = draggedImages; }, [draggedImages]);
 
   const ckEditorRef = useRef<CKEditorRef>(null);
 
@@ -190,9 +196,9 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
   };
 
   const sendAll = async () => {
-    const currentDraggedFiles = [...draggedFiles];
+    const currentDraggedFiles = [...draggedFilesRef.current];
     setDraggedFiles([]);
-    const currentDraggedImages = [...draggedImages];
+    const currentDraggedImages = [...draggedImagesRef.current];
     setDraggedImages([]);
 
     // 1. Send dragged files (non-image) + dragged images (which have real file.path)
@@ -204,6 +210,7 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
           : await getFileMessage(file);
         sendMessage({ message });
       } catch (e) {
+        console.error('[sendAll] send dragged file error:', e, file.name);
         feedbackToast(t("placeholder.sendFailed") || "发送失败");
         return;
       }
@@ -292,6 +299,17 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
       if (file.type.startsWith("image/")) {
         imageFiles.push(file as FileWithPath);
       } else {
+        // Electron with contextIsolation=true may not expose file.path
+        // on dataTransfer.files. Save to disk immediately to guarantee
+        // a usable path for getFileMessage later.
+        if (window.electronAPI) {
+          try {
+            const savedPath = await window.electronAPI.saveFileToDisk({ file, sync: true });
+            (file as any).path = savedPath;
+          } catch (e) {
+            console.error('[handleDrop] saveFileToDisk failed:', e);
+          }
+        }
         otherFiles.push(file as FileWithPath);
       }
     }
