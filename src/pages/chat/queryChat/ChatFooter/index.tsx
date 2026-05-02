@@ -351,23 +351,9 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
           </div>
         )}
 
-        {(draggedFiles.length > 0 || draggedImages.length > 0) && (
+        {draggedFiles.length > 0 && (
           <div className="border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
             <div className="flex flex-wrap gap-2 px-3 py-1.5">
-              {draggedImages.map((file, idx) => (
-                <div
-                  key={`img-${idx}`}
-                  className="flex items-center gap-1 px-2 py-1 bg-white rounded text-xs"
-                >
-                  <span className="max-w-[150px] truncate">{file.name}</span>
-                  <span
-                    className="cursor-pointer text-[var(--sub-text)] hover:text-red-500 ml-1"
-                    onClick={() => setDraggedImages(prev => prev.filter((_, i) => i !== idx))}
-                  >
-                    ✕
-                  </span>
-                </div>
-              ))}
               {draggedFiles.map((file, idx) => (
                 <div
                   key={`file-${idx}`}
