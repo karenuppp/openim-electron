@@ -189,6 +189,11 @@ openim-electron-demo/
 4. **Real-time Events**: IM SDK emits 20+ WebSocket callbacks (new message, contact update, group change, etc.) → `useGlobalEvents.tsx` routes events to respective stores via mitt event emitter
 5. **Message Send**: Create message → optimistic UI push → send via WASM SDK → server response merges into store
 
+## Changelog
+
+### 2025-05-02
+- **Fixed Windows packaging crash**: Replaced `axios` with Node.js built-in `https`/`http` in main process (`electron/main/ipcHandlerManage.ts`). The `downloadFile` IPC handler previously used `axios.get()`, which caused `Cannot find module 'axios'` errors in packaged Windows builds. Now uses native `https.get()` / `http.get()` instead — zero external dependencies needed at runtime.
+
 ### Key Files
 
 | File | Responsibility |
