@@ -39,6 +39,7 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
   const setQuoteMessage = useChatStore((s) => s.setQuoteMessage);
 
   const [screenshotPaths, setScreenshotPaths] = useState<string[]>([]);
+  const [draggedFiles, setDraggedFiles] = useState<FileWithPath[]>([]);
 
   const ckEditorRef = useRef<CKEditorRef>(null);
 
@@ -160,6 +161,7 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
 
   const clearAll = () => {
     setScreenshotPaths([]);
+    setDraggedFiles([]);
   };
 
   const onScreenshotStart = async (hideWindow: boolean) => {
@@ -183,6 +185,22 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
   };
 
   const sendAll = async () => {
+    const currentDraggedFiles = draggedFiles;
+    setDraggedFiles([]);
+
+    // Send dragged files first (before processing text/image)
+    for (const file of currentDraggedFiles) {
+      try {
+        const message = file.type.startsWith("image/")
+          ? await getImageMessage(file)
+          : await getFileMessage(file);
+        sendMessage({ message });
+      } catch (e) {
+        feedbackToast(t("placeholder.sendFailed") || "发送失败");
+        return;
+      }
+    }
+
     const imageFiles = await getAllImagesAsFiles();
     const screenshotFilePaths = screenshotPaths;
 
@@ -213,7 +231,15 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
       return;
     }
 
-    if (!cleanText && imageList.length === 0) {
+    if (!cleanText && imageList.length === 0 && currentDraggedFiles.length === 0) {
+      return;
+    }
+
+    // Only dragged files (already sent above), no text or images
+    if (!cleanText && imageList.length === 0 && currentDraggedFiles.length > 0) {
+      clearAll();
+      setHtml("");
+      setQuoteMessage(null);
       return;
     }
 
@@ -258,12 +284,32 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
     e.stopPropagation();
     const files = Array.from(e.dataTransfer.files);
     if (files.length === 0) return;
+
+    const imageFiles: FileWithPath[] = [];
+    const otherFiles: FileWithPath[] = [];
+
     for (const file of files) {
-      const isImage = file.type.startsWith("image/");
-      const message = isImage
-        ? await getImageMessage(file as FileWithPath)
-        : await getFileMessage(file as FileWithPath);
-      sendMessage({ message });
+      if (file.type.startsWith("image/")) {
+        imageFiles.push(file as FileWithPath);
+      } else {
+        otherFiles.push(file as FileWithPath);
+      }
+    }
+
+    for (const file of imageFiles) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result as string;
+        if (dataUrl && ckEditorRef.current) {
+          ckEditorRef.current.insertImage(dataUrl);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    if (otherFiles.length > 0) {
+      setDraggedFiles(prev => [...prev, ...otherFiles]);
+      feedbackToast(`${otherFiles.length} 个文件已添加到待发送列表`);
     }
   };
 
