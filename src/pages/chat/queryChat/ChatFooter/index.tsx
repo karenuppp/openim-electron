@@ -41,6 +41,10 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
   const [screenshotPaths, setScreenshotPaths] = useState<string[]>([]);
   const [draggedFiles, setDraggedFiles] = useState<FileWithPath[]>([]);
 
+  // Store reference to raw File objects for images that were also inserted into CKEditor
+  // This avoids the need to extract data: URLs back to Files (which lose file.path)
+  const [draggedImages, setDraggedImages] = useState<FileWithPath[]>([]);
+
   const ckEditorRef = useRef<CKEditorRef>(null);
 
   useEffect(() => {
@@ -162,6 +166,7 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
   const clearAll = () => {
     setScreenshotPaths([]);
     setDraggedFiles([]);
+    setDraggedImages([]);
   };
 
   const onScreenshotStart = async (hideWindow: boolean) => {
@@ -187,9 +192,12 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
   const sendAll = async () => {
     const currentDraggedFiles = [...draggedFiles];
     setDraggedFiles([]);
+    const currentDraggedImages = [...draggedImages];
+    setDraggedImages([]);
 
-    // 1. Send any pending dragged files
-    for (const file of currentDraggedFiles) {
+    // 1. Send dragged files (non-image) + dragged images (which have real file.path)
+    const allDragged = [...currentDraggedImages, ...currentDraggedFiles];
+    for (const file of allDragged) {
       try {
         const message = file.type.startsWith("image/")
           ? await getImageMessage(file)
@@ -201,29 +209,35 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
       }
     }
 
-    // 2. Extract images from CKEditor (screenshots + dragged images that were inserted)
+    // 2. Extract screenshots from CKEditor (these are data: URLs, not dragged images)
     const imageFiles = await getAllImagesAsFiles();
     const screenshotFilePaths = screenshotPaths;
     const usePathFallback = imageFiles.length === 0 && screenshotFilePaths.length > 0;
     const imageList = usePathFallback ? screenshotFilePaths : imageFiles;
 
-    // 3. Send images
-    for (const file of imageList) {
-      try {
-        const message = typeof file === "string"
-          ? await getImageMessageByPath(file, `screenshot_${Date.now()}.png`)
-          : await getImageMessage(file as FileWithPath);
-        sendMessage({ message });
-      } catch (e) {
-        feedbackToast(t("placeholder.sendFailed") || "发送失败");
-        return;
+    // 3. Send screenshot images (only if no dragged images were found in CKEditor)
+    //    Note: dragged images were already sent in step 1, so skip them here
+    //    by only sending images that are NOT from drags.
+    //    We detect this: if draggedImages existed, the CKEditor data: URL images
+    //    are duplicates of what we already sent, so we skip this step.
+    if (currentDraggedImages.length === 0) {
+      for (const file of imageList) {
+        try {
+          const message = typeof file === "string"
+            ? await getImageMessageByPath(file, `screenshot_${Date.now()}.png`)
+            : await getImageMessage(file as FileWithPath);
+          sendMessage({ message });
+        } catch (e) {
+          feedbackToast(t("placeholder.sendFailed") || "发送失败");
+          return;
+        }
       }
     }
 
     const cleanText = getCleanText(latestHtml.current ?? '');
 
     // 4. Determine if there's anything to send
-    const hasContent = currentDraggedFiles.length > 0 || imageList.length > 0 || !!cleanText;
+    const hasContent = allDragged.length > 0 || imageList.length > 0 || !!cleanText;
     if (!hasContent) return;
 
     // 5. If there's text, send it as a text/quote message
@@ -300,12 +314,19 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
 
     await Promise.all(insertPromises);
 
+    // Store all dragged files (including images) in state for sending.
+    // Images are also inserted into CKEditor for preview, but we send using
+    // the original File object (which has file.path on Electron) to avoid
+    // the File → data: URL → File roundtrip that loses the path.
+    if (imageFiles.length > 0) {
+      setDraggedImages(prev => [...prev, ...imageFiles]);
+    }
     if (otherFiles.length > 0) {
       setDraggedFiles(prev => [...prev, ...otherFiles]);
-      // Show file names in a visible way — CKEditor's onChange will fire for images
-      // We'll store all dragged items (including images that went to CKEditor)
-      // so the user can see what's pending
-      feedbackToast(`${imageFiles.length + otherFiles.length} 个文件已添加到待发送列表`);
+    }
+    const totalDragged = imageFiles.length + otherFiles.length;
+    if (totalDragged > 0) {
+      feedbackToast(`${totalDragged} 个文件已添加到待发送列表`);
     }
   };
 
