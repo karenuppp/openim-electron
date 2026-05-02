@@ -206,6 +206,13 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
 
     const cleanText = getCleanText(latestHtml.current ?? '');
 
+    if (!cleanText && imageList.length > 0) {
+      clearAll();
+      setHtml("");
+      setQuoteMessage(null);
+      return;
+    }
+
     if (!cleanText && imageList.length === 0) {
       return;
     }
@@ -228,6 +235,7 @@ const ChatFooter: ForwardRefRenderFunction<unknown, unknown> = (_, ref) => {
     clearAll();
     setHtml("");
     setQuoteMessage(null);
+
     sendMessage({ message });
   };
 
