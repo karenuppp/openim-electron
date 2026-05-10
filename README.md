@@ -191,6 +191,9 @@ openim-electron-demo/
 
 ## Changelog
 
+### 2025-05-10
+- **Fixed Windows screenshot not sending**: Added `node-screenshots-win32-x64-msvc` native module to `asarUnpack` and `win.extraResources` in electron-builder config. The native screenshot module was packed inside asar on Windows, causing silent fallback to `desktopCapturer` with lower-quality captures that failed to upload. Config now mirrors the macOS pattern (`node-screenshots-darwin-arm64`).
+
 ### 2025-05-03
 - **Moved file preview to top of input**: Dragged file/images pill list now displays between the quote message bar and CKEditor (instead of below CKEditor), styled consistently with the quote message (`border-b`, `bg-[var(--bg-primary)]`, matching padding).
 - **Added image drag preview in input**: Dragged images now also show in the file preview area (previously only non-image files appeared). Images and files are displayed in separate groups with per-item remove buttons.
