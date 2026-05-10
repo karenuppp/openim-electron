@@ -8,6 +8,7 @@
   asarUnpack: [
     "**/*.node",
     "**/node-screenshots-darwin-*/**",
+    "**/node-screenshots-win32-*/**",
     "**/react-screenshots/**",
     "**/node-screenshots/**",
   ],
@@ -71,6 +72,10 @@
       {
         from: "node_modules/koffi/build/koffi/win32_${arch}/",
         to: "koffi/win32_${arch}",
+      },
+      {
+        from: "node_modules/node-screenshots-win32-${arch}-msvc/",
+        to: "app.asar.unpacked/node_modules/node-screenshots-win32-${arch}-msvc",
       },
     ],
   },
